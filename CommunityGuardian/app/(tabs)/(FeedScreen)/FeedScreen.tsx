@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext'; // Make sure this is the correct path
 
 const tempPost = {
   author: 'Jane Doe',
@@ -19,7 +21,17 @@ const tempPost = {
 
 const FeedScreen = () => {
   const [showComments, setShowComments] = useState(true);
+  const { isAuthenticated } = useAuth(); // Access the auth state
+  const router = useRouter();
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/(auth)/Login'); // Redirect to login if not authenticated
+    }
+  }, [isAuthenticated]);
 
+  if (!isAuthenticated) {
+    return null; // Avoid rendering anything if not authenticated
+  }
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>

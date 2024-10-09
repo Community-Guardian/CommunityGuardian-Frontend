@@ -1,10 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { SafeAreaView, ScrollView, View, Text, TouchableOpacity, Switch, StyleSheet } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
+import { useAuth } from '@/context/AuthContext'; // Make sure this is the correct path
 
 export default function ProfileScreen() {
   const [isSosEnabled, setIsSosEnabled] = useState(true);
+  const { isAuthenticated } = useAuth(); // Access the auth state
+  const router = useRouter();
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/(auth)/Login'); // Redirect to login if not authenticated
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return null; // Avoid rendering anything if not authenticated
+  }
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
