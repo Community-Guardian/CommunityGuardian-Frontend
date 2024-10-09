@@ -7,7 +7,7 @@ const HomeLayout = () => {
     <Stack>
        <Stack.Screen name="index" options={{headerShown:false,}} />
        <Stack.Screen name="rewards" />
-       {/* <Stack.Screen name="add-post"  /> */}
+        <Stack.Screen name="EmergencyScreen"  /> 
 
     </Stack>
   )
