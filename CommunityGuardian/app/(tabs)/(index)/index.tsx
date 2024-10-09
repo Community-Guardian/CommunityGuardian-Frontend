@@ -24,7 +24,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           {/* SOS Call Emergency */}
-          <TouchableOpacity style={styles.gridItem} onPress={() => router.push('./AlertsScreen')}>
+          <TouchableOpacity style={styles.gridItem} onPress={() => router.push('./EmergencyScreen')}>
             <Ionicons name="call-outline" size={50} color="green" />
             <Text style={styles.gridItemText}>SOS Call Emergency</Text>
           </TouchableOpacity>
