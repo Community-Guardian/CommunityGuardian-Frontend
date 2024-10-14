@@ -7,36 +7,67 @@ import {
   TouchableOpacity,
   Modal,
   Pressable,
-  ScrollView, // Import ScrollView
+  ScrollView,
+  Alert,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import call from 'react-native-phone-call';
 
 const emergencyServicesData = [
-  { id: '1', name: 'Emergency 112', icon: 'call', alertText: 'Call Emergency 112' },
-  { id: '2', name: 'Police', icon: 'car', alertText: 'Call the Police' },
-  { id: '3', name: 'Ambulance', icon: 'medical', alertText: 'Call an Ambulance' },
-  { id: '4', name: 'Fire Station', icon: 'flame', alertText: 'Call the Fire Station' },
-  { id: '5', name: 'Wildlife Support', icon: 'paw', alertText: 'Call Wildlife Support' },
-  { id: '6', name: 'Child Helpline', icon: 'happy', alertText: 'Call Child Helpline' },
-  { id: '7', name: 'Women Helpline', icon: 'woman', alertText: 'Call Women Helpline' },
-  { id: '8', name: 'Car Accident', icon: 'car-sport', alertText: 'Report a Car Accident' },
-  { id: '9', name: 'Private', icon: 'lock-closed', alertText: 'Contact Private Support' },
+  { id: '1', name: 'Emergency 112', icon: 'call', alertText: 'Call Emergency 112', phone: '112' },
+  { id: '2', name: 'Police', icon: 'car', alertText: 'Call the Police', phone: '999' },
+  { id: '3', name: 'Ambulance', icon: 'medical', alertText: 'Call an Ambulance', phone: '999' },
+  { id: '4', name: 'Fire Station', icon: 'flame', alertText: 'Call the Fire Station', phone: '999' },
+  { id: '5', name: 'Wildlife Support', icon: 'paw', alertText: 'Call Wildlife Support', phone: '0719-202-220' },
+  { id: '6', name: 'Child Helpline', icon: 'happy', alertText: 'Call Child Helpline', phone: '1190' },
+  { id: '7', name: 'Women Helpline', icon: 'woman', alertText: 'Call Women Helpline', phone: '0722-200-111' },
+  { id: '8', name: 'Car Accident', icon: 'car-sport', alertText: 'Report a Car Accident', phone: '999' },
+  { id: '9', name: 'Private', icon: 'lock-closed', alertText: 'Contact Private Support', phone: '0721-000-000' },
 ];
 
 const EmergencyScreen = () => {
-  const [selectedService, setSelectedService] = useState(null);
+  const [selectedService, setSelectedService] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [timer, setTimer] = useState(5);
 
-  const handleCardPress = (service) => {
+  const requestCallPermission = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CALL_PHONE,
+        {
+          title: 'Call Permission',
+          message: 'This app needs access to make phone calls to emergency services.',
+          buttonNeutral: 'Ask Me Later',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        }
+      );
+      return granted === PermissionsAndroid.RESULTS.GRANTED;
+    } else {
+      return true; // iOS doesn't require explicit permission for the phone call
+    }
+  };
+
+  const handleCardPress = (service: any) => {
     setSelectedService(service);
     setModalVisible(true);
     setTimer(5); // Reset timer for every modal open
   };
 
-  const handleConfirmPress = () => {
-    setModalVisible(false);
-    alert(`${selectedService.alertText} is being triggered!`);
+  const handleConfirmPress = async () => {
+    const hasPermission = await requestCallPermission();
+    if (hasPermission && selectedService) {
+      const callArgs = {
+        number: selectedService.phone, // Use the phone number from the selected service
+        prompt: false, // Will prompt the user for confirmation
+      };
+      call(callArgs).catch(console.error); // Make the phone call
+      setModalVisible(false);
+    } else {
+      Alert.alert('Permission Denied', 'Permission to make phone calls is required.');
+    }
   };
 
   const closeModal = () => {
@@ -55,9 +86,7 @@ const EmergencyScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
-
         {/* SOS Button */}
         <TouchableOpacity style={styles.sosButton}>
           <Text style={styles.sosText}>SOS</Text>
@@ -79,7 +108,6 @@ const EmergencyScreen = () => {
             </TouchableOpacity>
           ))}
         </View>
-
       </ScrollView>
 
       {/* Modal for Confirmation */}
@@ -87,9 +115,7 @@ const EmergencyScreen = () => {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
+        onRequestClose={closeModal}
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
@@ -117,7 +143,6 @@ const EmergencyScreen = () => {
           </View>
         </View>
       </Modal>
-
     </SafeAreaView>
   );
 };
@@ -130,7 +155,7 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flexGrow: 1,
-    alignItems: 'center', // Align content to center
+    alignItems: 'center',
   },
   sosButton: {
     backgroundColor: 'red',
