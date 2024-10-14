@@ -16,5 +16,9 @@ export const CREATE_EMERGENCY_CONTACT_URL =`${BASE_URL}/emergency-contacts/`;
 export const GET_EMERGENCY_CONTACT_URL =`${BASE_URL}/emergency-contacts/`;
 export const UPDATE_EMERGENCY_CONTACT_URL =`${BASE_URL}/emergency-contacts/{id}/`;
 export const DELETE_EMERGENCY_CONTACT_URL =`${BASE_URL}/emergency-contacts/{id}/`;
+export const CREATE_REPORT_URL = `${BASE_URL}/reports/`;
+export const GET_REPORTS_URL = `${BASE_URL}/reports/`;
+export const UPDATE_REPORT_URL = `${BASE_URL}/reports/{id}/`;
+export const DELETE_REPORT_URL = `${BASE_URL}/reports/{id}/`;
 
 export { BASE_URL }

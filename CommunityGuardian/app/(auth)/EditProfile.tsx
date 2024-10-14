@@ -4,11 +4,11 @@ import { useAuth } from '@/context/AuthContext'; // Assuming you have the useAut
 
 export default function EditProfileScreen() {
   const { user, updateUser } = useAuth(); // Get the current user and updateUser function
-  const [firstName, setFirstName] = useState(user?.first_name || '');
-  const [lastName, setLastName] = useState(user?.last_name || '');
-  const [username, setUsername] = useState(user?.username || '');
-  const [contactNumber, setContactNumber] = useState(user?.contact_number || '');
-  const [email, setEmail] = useState(user?.email || '');
+  const [firstName, setFirstName] = useState(user?.details?.first_name || '');
+  const [lastName, setLastName] = useState(user?.details?.last_name || '');
+  const [username, setUsername] = useState(user?.details?.username || '');
+  const [contactNumber, setContactNumber] = useState(user?.details?.contact_number || '');
+  const [email, setEmail] = useState(user?.details?.email || '');
 
   const handleSave = async () => {
     const updatedData = {

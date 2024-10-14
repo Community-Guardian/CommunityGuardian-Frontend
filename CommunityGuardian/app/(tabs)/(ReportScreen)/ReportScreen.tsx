@@ -3,74 +3,106 @@ import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Scro
 import { Ionicons } from '@expo/vector-icons';
 import * as DocumentPicker from 'expo-document-picker'; 
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { RadioButton } from 'react-native-paper'; 
+import { Picker } from '@react-native-picker/picker';
+import { useReport } from '@/context/ReportContext';
 
 export default function ReportCrimeScreen() {
-  const [crimeType, setCrimeType] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerResult | null>(null);
-  const [role, setRole] = useState<'Victim' | 'Witness' | 'Perpetrator' | 'Anonymous' | null>(null);
-  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
-  const [date, setDate] = useState(new Date());
-  const [time, setTime] = useState(new Date());
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const { createReport } = useReport(); // Use ReportContext for submitting the report
+  const [crimeType, setCrimeType] = useState<string>(''); // Type as string
+  const [description, setDescription] = useState<string>(''); // Type as string
+  const [location, setLocation] = useState<string>(''); // New location input state, typed as string
+  const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerResult | null>(null); // Using DocumentPickerResult type from the latest expo-document-picker
+  const [role, setRole] = useState<string>(''); // Updated to string for dropdown
+  const [isTermsAccepted, setIsTermsAccepted] = useState<boolean>(false); // Boolean type for switch
+  const [date, setDate] = useState<Date>(new Date()); // Use Date type for date
+  const [time, setTime] = useState<Date>(new Date()); // Use Date type for time
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+  const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
 
-  const handleDateChange = (event: any, selectedDate: any) => {
+  const crimeTypes = ['burglary', 'assault', 'theft', 'vandalism', 'fraud', 'other']; // Crime types for the dropdown
+  const roles = ['victim', 'witness', 'perpetrator', 'anonymous']; // Role options
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || date;
-    setShowDatePicker(Platform.OS === 'ios');
+    setShowDatePicker(false);
     setDate(currentDate);
   };
 
-  const handleTimeChange = (event: any, selectedTime: any) => {
+  const handleTimeChange = (event: any, selectedTime?: Date) => {
     const currentTime = selectedTime || time;
-    setShowTimePicker(Platform.OS === 'ios');
+    setShowTimePicker(false);
     setTime(currentTime);
   };
 
-// File upload handler
-const handleFileUpload = async () => {
-  try {
-    const file = await DocumentPicker.getDocumentAsync({
-      type: '*/*', // Allowing all file types
-    });
-
-    if (file) {
-      // Check if the user didn't cancel the selection
-      if (file.type !== 'cancel') {
+  // Enhanced file upload handler with validation
+  const handleFileUpload = async () => {
+    try {
+      const file = await DocumentPicker.getDocumentAsync({
+        type: '*/*', // Allowing all file types
+        copyToCacheDirectory: true, // Ensures file is cached for processing
+        multiple: false, // We are selecting only one file at a time
+      });
+      console.log(file);
+      
+      // Check if the file selection was successful
+      if (!file.canceled) {
+        // Set the selected file
         setSelectedFile(file);
-        Alert.alert('File Selected', `File Name: ${file.name}`);
+
+        Alert.alert('File Selected', `File Name: ${file.assets[0].name}`);
       } else {
-        // Handle case when the user cancels the document picker
+        // Handle cancellation if needed
         Alert.alert('Cancelled', 'No file selected.');
       }
+    } catch (error) {
+      console.error('Error picking file:', error);
+      Alert.alert('Error', 'An error occurred while picking the file.');
     }
-  } catch (error) {
-    console.error('Error picking file:', error);
-  }
-};
-
+  };
 
   // Submission handler
-  const handleSubmit = () => {
-    if (!crimeType || !description || !role || !isTermsAccepted) {
+  const handleSubmit = async () => {
+    if (!crimeType || !description || !role || !location || !isTermsAccepted) {
       Alert.alert('Error', 'Please fill out all fields and agree to the terms before submitting.');
       return;
     }
 
-    Alert.alert('Success', 'Your report has been submitted.');
+    const formData = new FormData();
+    formData.append('crime_type', crimeType);
+    formData.append('description', description);
+    formData.append('date', date.toISOString().split('T')[0]); // Convert date to YYYY-MM-DD format
+    formData.append('time', time.toTimeString().split(' ')[0]); // Convert time to HH:MM:SS format
+    formData.append('who_am_i', role);
+    formData.append('location', location);
+
+    // Append file if selected and the file contains a URI (successfully picked)
+    if (selectedFile && !selectedFile.canceled) {
+      const fileData = {
+        uri: selectedFile.assets[0].uri,
+        name: selectedFile.assets[0].name,
+        type: selectedFile.assets[0].mimeType || 'application/octet-stream', // Default to octet-stream if mimeType is not available
+      };
+      formData.append('file_upload', fileData as any);
+    }
+
+    try {
+      await createReport(formData); // Submit the report to the backend
+      Alert.alert('Success', 'Your report has been submitted.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to submit the report. Please try again.');
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-
-        {/* Location Section */}
-        <View style={styles.locationSection}>
-          <Ionicons name="location-outline" size={20} color="#000" />
-          <Text style={styles.locationText}>Enter Location of incident</Text>
-          <Ionicons name="create-outline" size={20} color="#000" />
-        </View>
+        {/* Location Input Section */}
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Location of Incident"
+          value={location}
+          onChangeText={setLocation}
+        />
 
         {/* Date and Time Selection */}
         <View style={styles.timeDateSection}>
@@ -108,13 +140,20 @@ const handleFileUpload = async () => {
           <Text style={styles.selectedDateTimeText}>Selected Date: {date.toDateString()}</Text>
         </View>
 
-        {/* Crime Type Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="Select Crime type"
-          value={crimeType}
-          onChangeText={setCrimeType}
-        />
+        {/* Crime Type Dropdown */}
+        <View style={styles.dropdown}>
+          <Text style={styles.dropdownLabel}>Crime Type</Text>
+          <Picker
+            selectedValue={crimeType}
+            onValueChange={(itemValue) => setCrimeType(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select Crime Type" value="" />
+            {crimeTypes.map((type) => (
+              <Picker.Item key={type} label={type} value={type} />
+            ))}
+          </Picker>
+        </View>
 
         {/* Description Input */}
         <TextInput
@@ -131,38 +170,24 @@ const handleFileUpload = async () => {
           <Text style={styles.uploadButtonText}>Enter Media Evidence/files</Text>
         </TouchableOpacity>
 
-        {selectedFile && selectedFile.type === 'success' && (
-          <Text style={styles.fileName}>Selected File: {selectedFile.name}</Text>
+        {selectedFile && !selectedFile.canceled&& (
+          <Text style={styles.fileName}>Selected File: {selectedFile?.assets[0]?.name}</Text>
         )}
 
-        {/* Role Selection */}
-        <Text style={styles.roleText}>Please Select, I am the:</Text>
-        <View style={styles.radioGroup}>
-          <RadioButton.Group onValueChange={newValue => setRole(newValue as 'Victim' | 'Witness' | 'Perpetrator' | 'Anonymous')} value={role}>
-            <View style={styles.radioItem}>
-              <RadioButton value="Victim" />
-              <Text style={styles.radioLabel}>Victim</Text>
-            </View>
-            <View style={styles.radioItem}>
-              <RadioButton value="Witness" />
-              <Text style={styles.radioLabel}>Witness</Text>
-            </View>
-            <View style={styles.radioItem}>
-              <RadioButton value="Perpetrator" />
-              <Text style={styles.radioLabel}>Perpetrator</Text>
-            </View>
-            <View style={styles.radioItem}>
-              <RadioButton value="Anonymous" />
-              <Text style={styles.radioLabel}>Anonymous</Text>
-            </View>
-          </RadioButton.Group>
+        {/* Role Selection Dropdown */}
+        <View style={styles.dropdown}>
+          <Text style={styles.dropdownLabel}>I am the:</Text>
+          <Picker
+            selectedValue={role}
+            onValueChange={(itemValue) => setRole(itemValue)}
+            style={styles.picker}
+          >
+            <Picker.Item label="Select Role" value="" />
+            {roles.map((r) => (
+              <Picker.Item key={r} label={r} value={r} />
+            ))}
+          </Picker>
         </View>
-
-        {/* Additional Details */}
-        {/* <TouchableOpacity style={styles.additionalDetailsButton}>
-          <Ionicons name="add-circle-outline" size={20} color="white" />
-          <Text style={styles.additionalDetailsText}>Additional Details</Text>
-        </TouchableOpacity> */}
 
         {/* Terms and Conditions */}
         <View style={styles.termsContainer}>
@@ -192,32 +217,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginLeft: 12,
-  },
-  locationSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#f3f4f6',
-    padding: 12,
-    margin: 16,
-    borderRadius: 8,
-  },
-  locationText: {
-    flex: 1,
-    fontSize: 16,
-    marginLeft: 8,
   },
   timeDateSection: {
     flexDirection: 'row',
@@ -279,38 +278,21 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#4b5563',
   },
-  roleText: {
-    textAlign: 'center',
-    fontWeight: 'bold',
-    marginTop: 24,
-  },
-  radioGroup: {
+  dropdown: {
     marginHorizontal: 16,
+    marginTop: 16,
   },
-  radioItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 4,
-  },
-  radioLabel: {
-    marginLeft: 8,
+  dropdownLabel: {
+    marginBottom: 8,
     fontSize: 16,
     color: '#4b5563',
   },
-  additionalDetailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ef4444',
+  picker: {
+    backgroundColor: '#f9fafb',
     padding: 12,
-    marginHorizontal: 16,
-    marginTop: 16,
     borderRadius: 8,
-    justifyContent: 'center',
-  },
-  additionalDetailsText: {
-    color: 'white',
-    marginLeft: 8,
-    fontWeight: 'bold',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   termsContainer: {
     flexDirection: 'row',

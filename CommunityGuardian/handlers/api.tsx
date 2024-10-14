@@ -12,6 +12,11 @@ import {
   GET_EMERGENCY_CONTACT_URL,
   UPDATE_EMERGENCY_CONTACT_URL, // Add this line for the new endpoint
   DELETE_EMERGENCY_CONTACT_URL, // Add this line for the new endpoint
+  CREATE_REPORT_URL,    // Add this line for the new report endpoint
+  GET_REPORTS_URL,      // Add this line for fetching reports
+  UPDATE_REPORT_URL,    // Add this line for updating reports
+  DELETE_REPORT_URL     // Add this line for deleting reports
+
 } from './apiConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -159,7 +164,7 @@ export const logoutUser = async () => {
     await AsyncStorage.removeItem('refreshToken');
   }
 };
-
+// 
 // New Emergency Contact Handlers
 export const createEmergencyContact = async (contactData: any) => {
   try {
@@ -194,3 +199,47 @@ export const deleteEmergencyContact = async (contactId: string) => {
     handleApiError(error as AxiosError);
   }
 };
+// New Report Handlers
+
+export const postReport = async (reportData: FormData) => {
+  try {
+    const response = await api.post(CREATE_REPORT_URL, reportData, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // This is automatically set by Axios for FormData, but added here for clarity
+      },
+    });
+    return response.data;
+  } catch (error) {
+    handleApiError(error as AxiosError);
+    throw error; // Optionally rethrow the error if you need further handling elsewhere
+  }
+};
+export const getReports = async () => {
+  try {
+    const response = await api.get(GET_REPORTS_URL);
+    return response.data;
+  } catch (error) {
+    handleApiError(error as AxiosError);
+  }
+};
+
+export const UpdateReport = async (reportId: string, reportData: FormData) => {
+  try {
+    const url = UPDATE_REPORT_URL.replace('{id}', reportId);
+    const response = await api.patch(url, reportData);
+    return response.data;
+  } catch (error) {
+    handleApiError(error as AxiosError);
+  }
+};
+
+export const DeleteReport = async (reportId: string) => {
+  try {
+    const url = DELETE_REPORT_URL.replace('{id}', reportId);
+    const response = await api.delete(url);
+    return response.data;
+  } catch (error) {
+    handleApiError(error as AxiosError);
+  }
+};
+
