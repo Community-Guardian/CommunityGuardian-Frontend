@@ -159,10 +159,10 @@ const handleFileUpload = async () => {
         </View>
 
         {/* Additional Details */}
-        <TouchableOpacity style={styles.additionalDetailsButton}>
+        {/* <TouchableOpacity style={styles.additionalDetailsButton}>
           <Ionicons name="add-circle-outline" size={20} color="white" />
           <Text style={styles.additionalDetailsText}>Additional Details</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         {/* Terms and Conditions */}
         <View style={styles.termsContainer}>

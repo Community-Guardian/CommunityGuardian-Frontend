@@ -9,65 +9,67 @@ import { useAuth } from '@/context/AuthContext';
 export default function ProfileScreen() {
   const [isSosEnabled, setIsSosEnabled] = useState(true);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [emergencyContacts, setEmergencyContacts] = useState([]);
   const [newContact, setNewContact] = useState({
     name: '',
-    phone: '',
+    phone_number: '',
     email: '',
     relationship: 'Parent/Guardian',
   });
-  const [isEditing, setIsEditing] = useState(false); // New state to track if editing
-  const [editIndex, setEditIndex] = useState(null); // Track which contact is being edited
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContactId, setEditContactId] = useState<string | null>(null);
 
-  const { isAuthenticated, user } = useAuth();
+  const { user, createContact,  updateContact, deleteContact, isAuthenticated ,logout} = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/(auth)/Login');
     }
-    // Optionally, fetch existing contacts from backend
   }, [isAuthenticated]);
 
-  const handleAddContact = async () => {
-    if (!newContact.name || !newContact.phone || !newContact.email) {
+  const handleAddOrUpdateContact = async () => {
+    if (!newContact.name || !newContact.phone_number || !newContact.email) {
       alert('Please fill in all fields');
       return;
     }
 
-    if (isEditing) {
-      // If editing, update the contact in the list
-      const updatedContacts = [...emergencyContacts];
-      updatedContacts[editIndex] = newContact;
-      setEmergencyContacts(updatedContacts);
-      setIsEditing(false); // Reset editing state
-    } else {
-      // If adding, add the contact to the list
-      setEmergencyContacts([...emergencyContacts, newContact]);
+    try {
+      if (isEditing && editContactId) {
+        await updateContact(editContactId, newContact);
+      } else {
+        await createContact(newContact);
+      }
+      setModalVisible(false);
+      setNewContact({ name: '', phone_number: '', email: '', relationship: 'Parent/Guardian' });
+      setIsEditing(false);
+      setEditContactId(null);
+    } catch (error) {
+      console.error('Failed to save contact:', error);
     }
-
-    setModalVisible(false); // Close the modal
-    setNewContact({ name: '', phone: '', email: '', relationship: 'Parent/Guardian' }); // Reset form
-    setEditIndex(null); // Reset the edit index
   };
 
-  const handleDeleteContact = (index) => {
-    const updatedContacts = emergencyContacts.filter((_, i) => i !== index);
-    setEmergencyContacts(updatedContacts);
+  const handleDeleteContact = async (id: string) => {
+    try {
+      await deleteContact(id);
+    } catch (error) {
+      console.error('Failed to delete contact:', error);
+    }
   };
 
-  const handleEditContact = (index) => {
-    const contactToEdit = emergencyContacts[index];
-    setNewContact(contactToEdit); // Populate the contact in the form for editing
-    setIsEditing(true); // Set editing state to true
-    setEditIndex(index); // Store the index of the contact being edited
-    setModalVisible(true); // Show the modal
+  const handleEditContact = (contact: any) => {
+    setNewContact(contact);
+    setIsEditing(true);
+    setEditContactId(contact.id);
+    setModalVisible(true);
   };
-
-  if (!isAuthenticated) {
-    return null;
-  }
-
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace('/(auth)/Login'); // Redirect to login after logout
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -76,7 +78,7 @@ export default function ProfileScreen() {
           <View style={styles.profileImageContainer}>
             <Ionicons name="person-outline" size={40} color="red" />
           </View>
-          <Text style={styles.profileName}>{user.username}</Text>
+          <Text style={styles.profileName}>{user?.details?.username}</Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/EditProfile')}>
             <Text style={styles.editProfile}>Edit Profile {'>'}</Text>
           </TouchableOpacity>
@@ -85,7 +87,7 @@ export default function ProfileScreen() {
         {/* General Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>General</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(auth)/Login')}>
             <Text style={styles.sectionItem}>Help Centre</Text>
           </TouchableOpacity>
           <TouchableOpacity>
@@ -107,7 +109,7 @@ export default function ProfileScreen() {
               trackColor={{ true: 'green', false: '#d1d5db' }}
             />
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/(auth)/Login')}>
             <Text style={styles.sectionItem}>Edit SOS Message Content</Text>
           </TouchableOpacity>
           <TouchableOpacity>
@@ -119,7 +121,7 @@ export default function ProfileScreen() {
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Emergency Contacts</Text>
           <TouchableOpacity style={styles.addContact} onPress={() => {
-            setIsEditing(false); // Reset editing state when adding new contact
+            setIsEditing(false);
             setModalVisible(true);
           }}>
             <Ionicons name="add-outline" size={20} color="#000" />
@@ -128,19 +130,19 @@ export default function ProfileScreen() {
 
           {/* Display Emergency Contacts */}
           <FlatList
-            data={emergencyContacts}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item, index }) => (
+            data={user.emergency_contacts} // Assuming emergency_contact is an array of contact objects
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
               <View style={styles.contactCard}>
                 <View style={styles.contactInfo}>
                   <Text style={styles.contactName}>{item.name}</Text>
                   <Text style={styles.contactRelationship}>{item.relationship}</Text>
                 </View>
                 <View style={styles.contactActions}>
-                  <TouchableOpacity onPress={() => handleEditContact(index)}>
+                  <TouchableOpacity onPress={() => handleEditContact(item)}>
                     <Ionicons name="pencil-outline" size={24} color="blue" style={styles.icon} />
                   </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleDeleteContact(index)}>
+                  <TouchableOpacity onPress={() => handleDeleteContact(item.id)}>
                     <Ionicons name="trash-outline" size={24} color="red" style={styles.icon} />
                   </TouchableOpacity>
                 </View>
@@ -148,6 +150,10 @@ export default function ProfileScreen() {
             )}
           />
         </View>
+        {/* Logout Button */}
+        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+          <Text style={styles.logoutButtonText}>Logout</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Modal for Adding/Editing Emergency Contact */}
@@ -176,8 +182,8 @@ export default function ProfileScreen() {
               placeholder="Contact Number"
               style={styles.input}
               keyboardType="phone-pad"
-              value={newContact.phone}
-              onChangeText={(text) => setNewContact({ ...newContact, phone: text })}
+              value={newContact.phone_number}
+              onChangeText={(text) => setNewContact({ ...newContact, phone_number: text })}
             />
             <TextInput
               placeholder="Email"
@@ -203,7 +209,7 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             ))}
 
-            <TouchableOpacity onPress={handleAddContact} style={styles.addButton}>
+            <TouchableOpacity onPress={handleAddOrUpdateContact} style={styles.addButton}>
               <Text style={styles.addButtonText}>{isEditing ? 'Update' : 'Add'}</Text>
             </TouchableOpacity>
           </View>
@@ -353,5 +359,17 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: 'white',
     fontWeight: 'bold',
+  },
+  logoutButton: {
+    backgroundColor: 'red',
+    padding: 12,
+    borderRadius: 5,
+    alignItems: 'center',
+    margin: 16,
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
