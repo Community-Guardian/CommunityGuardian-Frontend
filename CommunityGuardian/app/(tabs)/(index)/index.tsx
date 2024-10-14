@@ -54,6 +54,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
+        
         {/* Contact Information */}
         <Text style={styles.contactText}>
           For Any Queries Contact Murang’a Police Department Through:

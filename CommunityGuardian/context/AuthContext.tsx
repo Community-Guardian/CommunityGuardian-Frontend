@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
-import { loginUser, logoutUser, signUpUser, getUserDetails } from '@/handlers/api'; // Import your API functions
+import { loginUser, logoutUser, signUpUser, getIndividual, UpdateIndividual } from '@/handlers/api'; // Import the API functions, including updateIndividual
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Define the shape of our AuthContext
@@ -9,6 +9,7 @@ interface AuthContextData {
   login: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password1: string, password2: string, userType: string) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (updatedData: any) => Promise<void>; // Add updateUser function definition
   loading: boolean;
 }
 
@@ -24,6 +25,7 @@ const AuthContext = createContext<AuthContextData>({
   login: async () => {},
   signUp: async () => {},
   logout: async () => {},
+  updateUser: async () => {}, // Initialize updateUser
   loading: false,
 });
 
@@ -39,7 +41,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const token = await AsyncStorage.getItem('accessToken');
       if (token) {
         try {
-          const userData = await getUserDetails();
+          const userData = await getIndividual();
           setUser(userData);
           setIsAuthenticated(true);
         } catch (error) {
@@ -68,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Sign Up function
-  const signUp = async (email: string,password1: string, password2: string, userType: string) => {
+  const signUp = async (email: string, password1: string, password2: string, userType: string) => {
     try {
       setLoading(true);
       const response = await signUpUser(email, password1, password2, userType);
@@ -98,8 +100,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Update user details function
+  const updateUser = async (updatedData: any) => {
+    try {
+      setLoading(true);
+      const response = await UpdateIndividual(updatedData); // Call the API to update user data
+      setUser(response); // Update the user in the context with the new data
+      await AsyncStorage.setItem('user', JSON.stringify(response)); // Optionally save the updated user data in AsyncStorage
+    } catch (error) {
+      console.error('Error updating user:', error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, signUp, logout, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, signUp, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

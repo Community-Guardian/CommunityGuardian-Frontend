@@ -3,7 +3,7 @@ const BASE_URL = 'http://192.168.0.105:80';
 // const BASE_URL = 'http://lemur-neutral-subtly.ngrok-free.app';
 // const BASE_URL = 'https://nrad8394.pythonanywhere.com';
 
-export const GET_INDIVIDUAL_URL = `${BASE_URL}/individuals/`;
+export const GET_INDIVIDUAL_URL = `${BASE_URL}/individuals/pk`;
 export const UPDATE_INDIVIDUAL_URL = `${BASE_URL}/individuals/pk/`;
 
 

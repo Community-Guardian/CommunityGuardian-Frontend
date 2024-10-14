@@ -16,6 +16,10 @@ export default function AuthLayout() {
         name="SignUp" // Matches with the signup.tsx screen
         options={{ title: 'Sign Up' }}
       />
+       <Stack.Screen
+        name="EditProfile" // Matches with the signup.tsx screen
+        options={{ title: 'Edit Profile' , headerShown: true,}}
+      />
     </Stack>
   );
 }

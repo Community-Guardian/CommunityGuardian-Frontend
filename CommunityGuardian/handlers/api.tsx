@@ -31,7 +31,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config: any) => { // Cast config to any to bypass the type issues
     try {
-      const token = await localStorage.getItem('accessToken');
+      const token = await AsyncStorage.getItem('accessToken');
       console.log(token);
 
       // Explicitly check if the token is neither null nor undefined
@@ -59,7 +59,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = await localStorage.getItem('refreshToken');
+        const refreshToken = await AsyncStorage.getItem('refreshToken');
 
         // Explicitly check if the refresh token is neither null nor undefined
         if (refreshToken) {
@@ -67,7 +67,7 @@ api.interceptors.response.use(
 
           if (response.status === 200) {
             // Store the new access token
-            await localStorage.setItem('accessToken', response.data.access);
+            await AsyncStorage.setItem('accessToken', response.data.access);
 
             // Update the Authorization header with the new access token
             if (originalRequest.headers) {
@@ -152,7 +152,9 @@ export const getIndividual = async () => {
 };
 export const UpdateIndividual = async (formData:any) => {
   try {
-    const response = await api.patch(UPDATE_INDIVIDUAL_URL,{formData});    
+    console.log(formData);
+    
+    const response = await api.patch(UPDATE_INDIVIDUAL_URL,formData);    
     return response.data;
   } catch (error) {
     handleApiError(error as AxiosError);
@@ -160,7 +162,7 @@ export const UpdateIndividual = async (formData:any) => {
 };
 export const logoutUser = async () => {
   try {
-    const authToken = await localStorage.getItem('accessToken');
+    const authToken = await AsyncStorage.getItem('accessToken');
     if (!authToken) throw new Error('No auth token found');
     const response = await api.post(LOGOUT_URL);
     return response.data;
@@ -168,8 +170,8 @@ export const logoutUser = async () => {
     handleApiError(error as AxiosError);
   }
   finally {
-    await localStorage.removeItem('accessToken');
-    await localStorage.removeItem('refreshToken');
+    await AsyncStorage.removeItem('accessToken');
+    await AsyncStorage.removeItem('refreshToken');
   }
 };
 
