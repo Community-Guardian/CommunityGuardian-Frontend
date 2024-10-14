@@ -20,6 +20,9 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "CALL_PHONE"  
+      ],
       "package": "com.nrad8394.CommunityGuardian"
     },
     "web": {
