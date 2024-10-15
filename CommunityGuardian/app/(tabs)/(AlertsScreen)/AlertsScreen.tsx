@@ -119,7 +119,8 @@ const styles = StyleSheet.create({
   },
 });
 
-// export default AlertsScreen;
+export default AlertsScreen;
+
 // import React, { useState } from 'react';
 // import { View, StyleSheet } from 'react-native';
 // import MapView, { Marker, Region } from 'react-native-maps';
@@ -222,4 +223,3 @@ const styles = StyleSheet.create({
 //   },
 // });
 
-// export default GooglePlacesSearch;
