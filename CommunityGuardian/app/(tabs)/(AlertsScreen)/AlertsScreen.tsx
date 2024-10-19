@@ -73,18 +73,18 @@ const AlertsScreen = () => {
         {/* Additional markers around Murang'a Town */}
         <Marker
           coordinate={{ latitude: -0.790, longitude: 37.670 }}
-          title="Area 1"
-          description="Description of Area 1"
+          title="Crime 1"
+          description="Description of Crime 1"
         />
         <Marker
           coordinate={{ latitude: -0.795, longitude: 37.660 }}
-          title="Area 2"
-          description="Description of Area 2"
+          title="Crime 2"
+          description="Description of Crime 2"
         />
         <Marker
           coordinate={{ latitude: -0.783, longitude: 37.680 }}
-          title="Area 3"
-          description="Description of Area 3"
+          title="Crime 3"
+          description="Description of Crime 3"
         />
       </MapView>
     </SafeAreaView>
