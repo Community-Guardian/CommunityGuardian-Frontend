@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   View,
@@ -9,48 +9,63 @@ import {
   Image,
   Modal,
   Pressable,
+  ActivityIndicator, // To display loading indicator
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '@/context/AuthContext'; // Import the AuthContext
 
-const rewardsData = [
-  { id: '1', name: 'John Doe', reward: 'Ksh5000', image: 'https://miro.medium.com/v2/resize:fit:1400/1*00-rDciPw699Ta6QIYxk-Q.jpeg', details: 'John Doe is wanted for questioning regarding a recent robbery in Nairobi.' },
-  { id: '2', name: 'Jane Doe', reward: 'Ksh5000', image: 'https://miro.medium.com/v2/resize:fit:1400/1*00-rDciPw699Ta6QIYxk-Q.jpeg', details: 'Jane Doe is wanted for questioning in relation to a fraud case in Murang\'a.' },
-  { id: '3', name: 'Sam Doe', reward: 'Ksh5000', image: 'https://miro.medium.com/v2/resize:fit:1400/1*00-rDciPw699Ta6QIYxk-Q.jpeg', details: 'Sam Doe is suspected to be involved in a drug trafficking ring in Mombasa.' },
-  { id: '4', name: 'Peter Doe', reward: 'Ksh5000', image: 'https://miro.medium.com/v2/resize:fit:1400/1*00-rDciPw699Ta6QIYxk-Q.jpeg', details: 'Peter Doe is a key suspect in a theft case in Kisumu.' },
-  { id: '5', name: 'Dan Doe', reward: 'Ksh5000', image: 'https://miro.medium.com/v2/resize:fit:1400/1*00-rDciPw699Ta6QIYxk-Q.jpeg', details: 'Dan Doe is wanted for questioning in a hit-and-run case in Eldoret.' },
-  { id: '6', name: 'Joy Doe', reward: 'Ksh5000', image: 'https://miro.medium.com/v2/resize:fit:1400/1*00-rDciPw699Ta6QIYxk-Q.jpeg', details: 'Joy Doe is wanted in connection with a recent scam targeting elders in Nairobi.' },
-];
-
-// Define a type for the person object
-interface Person {
+interface Reward {
   id: string;
   name: string;
-  reward: string;
+  amount: string;
   image: string;
-  details: string;
+  description: string;
 }
 
 const RewardsScreen = () => {
-  // Initialize selectedPerson as either null or a Person object
-  const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [rewards, setRewards] = useState<Reward[]>([]); // State to store rewards
+  const [loading, setLoading] = useState(true); // State to manage loading
+  const [selectedReward, setSelectedReward] = useState<Reward | null>(null); // State to manage selected reward
+  const [modalVisible, setModalVisible] = useState(false); // Modal visibility
+  const { getRewards } = useAuth(); // Fetch getRewards function from AuthContext
 
-  const handleCardPress = (person: Person) => {
-    setSelectedPerson(person);
+  useEffect(() => {
+    const fetchRewards = async () => {
+      try {
+        const rewardsData = await getRewards(); // Fetch rewards from backend
+        setRewards(rewardsData); // Update rewards state
+      } catch (error) {
+        console.error('Error fetching rewards:', error);
+      } finally {
+        setLoading(false); // Stop loading indicator
+      }
+    };
+
+    fetchRewards(); // Fetch rewards when component mounts
+  }, []);
+
+  const handleCardPress = (reward: Reward) => {
+    setSelectedReward(reward);
     setModalVisible(true);
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loader}>
+        <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-
-      {/* Info Text */}
       <Text style={styles.infoText}>
         Relevant information regarding the whereabouts of the persons of interest will be rewarded as per terms.
       </Text>
 
       {/* Grid View */}
       <FlatList
-        data={rewardsData}
+        data={rewards}
         keyExtractor={(item) => item.id}
         numColumns={2}
         contentContainerStyle={styles.gridContainer}
@@ -61,12 +76,12 @@ const RewardsScreen = () => {
           >
             <Image source={{ uri: item.image }} style={styles.cardImage} />
             <Text style={styles.cardName}>{item.name}</Text>
-            <Text style={styles.cardReward}>{item.reward}</Text>
+            <Text style={styles.cardReward}>{item.amount}</Text>
           </TouchableOpacity>
         )}
       />
 
-      {/* Modal for Person Details */}
+      {/* Modal for Reward Details */}
       <Modal
         animationType="slide"
         transparent={true}
@@ -77,12 +92,12 @@ const RewardsScreen = () => {
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
-            {selectedPerson && (
+            {selectedReward && (
               <>
-                <Text style={styles.modalTitle}>{selectedPerson.name}</Text>
-                <Image source={{ uri: selectedPerson.image }} style={styles.modalImage} />
-                <Text style={styles.modalDetails}>{selectedPerson.details}</Text>
-                <Text style={styles.modalContact}>Contact Authorities: +254 712 345 678</Text>
+                <Text style={styles.modalTitle}>{selectedReward.name}</Text>
+                <Image source={{ uri: selectedReward.image }} style={styles.modalImage} />
+                <Text style={styles.modalDetails}>{selectedReward.description}</Text>
+                <Text style={styles.modalContact}>Reward: {selectedReward.amount}</Text>
 
                 <Pressable
                   style={[styles.button, styles.buttonClose]}
@@ -103,23 +118,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-  },
-  backButton: {
-    marginRight: 10,
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  searchIcon: {
-    position: 'absolute',
-    right: 15,
-    color: '#888',
   },
   infoText: {
     paddingHorizontal: 15,
@@ -202,21 +200,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
-  bottomNavigation: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 10,
-    borderTopWidth: 1,
-    borderTopColor: '#ddd',
-    backgroundColor: '#fff',
-  },
-  navItem: {
+  loader: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  navText: {
-    fontSize: 12,
-    color: '#333',
-    marginTop: 2,
   },
 });
 

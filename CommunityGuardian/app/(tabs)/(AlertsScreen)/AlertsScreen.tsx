@@ -28,12 +28,76 @@ const AlertsScreen = () => {
         initialRegion={initialRegion}
         showsUserLocation={true}
       >
-        {/* Example Marker for Murang'a Town */}
-        <Marker
-          coordinate={{ latitude: -0.786, longitude: 37.666 }}
-          title="Murang'a Town"
-          description="Murang'a County"
-        />
+       
+<Marker
+  coordinate={{ latitude: -0.786, longitude: 37.666 }}
+  title="Kidnapping"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.8101, longitude: 37.1276 }}
+  title="Theft"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.6982, longitude: 36.9559 }}
+  title="Robbery"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.6775, longitude: 36.9562 }}
+  title="Murder"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.8221, longitude: 37.0931 }}
+  title="Assult"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.9321, longitude: 37.0284 }}
+  title="Robbery"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.9456, longitude: 37.2502 }}
+  title="Fraud"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.6833, longitude: 37.0239 }}
+  title="Cyber Crime"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.8149, longitude: 36.9692 }}
+  title="Murder"
+  description="Murang'a County"
+/>
+
+
+<Marker
+  coordinate={{ latitude: -0.9461, longitude: 37.1234 }}
+  title="Rape"
+  description="Murang'a County"
+/>
+
       </MapView>
 
      

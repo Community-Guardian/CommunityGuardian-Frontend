@@ -1,120 +1,194 @@
-import React, { useState,useEffect } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { SafeAreaView, View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/context/AuthContext'; // Make sure this is the correct path
 
-const tempPost = {
-  author: 'Jane Doe',
-  time: '5d ago',
-  content:
-    ' URGENT: MISSING CHILD!!. Please help us find Mary Njambi, a precious 7-year-old girl who has been reported missing from Muranga Town. Mary is a petite young girl with a beautiful smile and a cheerful spirit. She has short black hair and is wearing a bright yellow dress with pink sandals. Last seen playing near the market area, she may be feeling scared and alone. If you have any information about her whereabouts, please contact us immediately. Lets come together as a community to bring Mary home safely!',
-  image: 'https://images.pexels.com/photos/2505397/pexels-photo-2505397.jpeg?cs=srgb&dl=pexels-planeteelevene-2505397.jpg&fm=jpg', // Placeholder for post image
-  likes: 79,
-  comments: 17,
-  likedBy: 'John Doe and 78 others',
-  commentsData: [
-    { id: '1', username: 'Jane', text: 'Lets Help!', likes: 10 },
-    { id: '2', username: 'John', text: 'In our Prayers!', likes: 5 },
-  ],
-};
-
 const FeedScreen = () => {
-  const [showComments, setShowComments] = useState(true);
-  const { isAuthenticated } = useAuth(); // Access the auth state
+  const [posts, setPosts] = useState<any[]>([]); // To store posts
+  const [loadingPosts, setLoadingPosts] = useState(true);
+  const [newComment, setNewComment] = useState(''); // For the new comment input
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null); // For tracking the post to add a comment
+  const { isAuthenticated, getAllPosts, getPostComments, createPostComment } = useAuth(); // Access the auth state and API functions
   const router = useRouter();
+
   useEffect(() => {
     if (!isAuthenticated) {
       router.replace('/(auth)/Login'); // Redirect to login if not authenticated
+    } else {
+      fetchPosts(); // Fetch posts when authenticated
     }
   }, [isAuthenticated]);
+
+  const fetchPosts = async () => {
+    try {
+      const fetchedPosts = await getAllPosts(); // Fetch posts from backend
+      setPosts(fetchedPosts);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoadingPosts(false);
+    }
+  };
+
+  const handleCommentToggle = async (postId: string) => {
+    if (selectedPostId === postId) {
+      // If the same post is selected, close the comments section
+      setSelectedPostId(null);
+    } else {
+      try {
+        const comments = await getPostComments(postId); // Fetch comments for the post
+        const updatedPosts = posts.map((post) =>
+          post.id === postId ? { ...post, commentsData: comments } : post
+        );
+        setPosts(updatedPosts);
+        setSelectedPostId(postId); // Set the selected post ID to show its comments
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    }
+  };
+
+  const handleSendComment = async (postId: string) => {
+    if (newComment.trim()) {
+      try {
+        const commentData = {
+          post: postId,
+          content: newComment,
+        };
+        await createPostComment(commentData); // Send the comment to the backend
+        // Fetch the updated comments after posting
+        const updatedComments = await getPostComments(postId);
+        const updatedPosts = posts.map((post) =>
+          post.id === postId ? { ...post, commentsData: updatedComments } : post
+        );
+        setPosts(updatedPosts);
+        setNewComment(''); // Clear the input
+      } catch (error) {
+        console.error('Error creating comment:', error);
+      }
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    try {
+      const updatedPosts = posts.map((post) =>
+        post.id === postId
+          ? { ...post, likes: post.likes + 1 } // Increment the like count locally
+          : post
+      );
+      setPosts(updatedPosts);
+      // You should also send a request to the backend to persist the like (you can implement this in your backend API)
+    } catch (error) {
+      console.error('Error liking the post:', error);
+    }
+  };
 
   if (!isAuthenticated) {
     return null; // Avoid rendering anything if not authenticated
   }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {/* Post Container */}
-        <View style={styles.postContainer}>
-          {/* Header: Profile image, author, time */}
-          <View style={styles.header}>
-            <Image
-              source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/Natural_Afro_American_Hair.jpg/220px-Natural_Afro_American_Hair.jpg' }} // Placeholder for user avatar
-              style={styles.avatar}
-            />
-            <View>
-              <Text style={styles.author}>{tempPost.author}</Text>
-              <Text style={styles.time}>{tempPost.time}</Text>
-            </View>
-          </View>
-
-          {/* Post Text Content */}
-          <Text style={styles.content}>{tempPost.content}</Text>
-
-          {/* Post Image */}
-          <Image
-            source={{ uri: tempPost.image }} // Placeholder for the actual post image
-            style={styles.postImage}
-          />
-
-          {/* Likes and Comments Summary */}
-          <Text style={styles.likedBy}>{tempPost.likedBy}</Text>
-
-          {/* Post Actions */}
-          <View style={styles.postActions}>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="thumbs-up-outline" size={18} />
-              <Text style={styles.actionText}>Like</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={() => setShowComments(!showComments)}>
-              <Ionicons name="chatbubble-outline" size={18} />
-              <Text style={styles.actionText}>Comment</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="share-outline" size={18} />
-              <Text style={styles.actionText}>Share</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Comments Section */}
-        {showComments && (
-          <View style={styles.commentsContainer}>
-            {tempPost.commentsData.map((item) => (
-              <View key={item.id} style={styles.commentContainer}>
+        {loadingPosts ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : (
+          posts.map((post) => (
+            <View key={post.id} style={styles.postContainer}>
+              {/* Header: Profile image, author, time */}
+              <View style={styles.header}>
                 <Image
-                  source={{ uri: 'https://s3.amazonaws.com/cms.ipressroom.com/173/files/20211/603767f82cfac26fdf6354e9_Hidden+costs+of+being+black/Hidden+costs+of+being+black_hero.jpg' }} // Placeholder for user avatar
-                  style={styles.commentAvatar}
+                  source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtcPVdcIDUDATBrcMoTRUoE2f1OOPz_nIeag&s'}} // Replace with the actual author image URL
+                  style={styles.avatar}
                 />
-                <View style={styles.commentContent}>
-                  <Text style={styles.commentUsername}>{item.username}</Text>
-                  <Text style={styles.commentText}>{item.text}</Text>
-                  <View style={styles.commentActions}>
-                    <TouchableOpacity>
-                      <Ionicons name="thumbs-up-outline" size={18} />
-                    </TouchableOpacity>
-                    <Text style={styles.commentActionText}>{item.likes} Likes</Text>
-                  </View>
+                <View>
+                  <Text style={styles.author}>{post.author}</Text>
+                  <Text style={styles.time}>{post.time}</Text>
                 </View>
               </View>
-            ))}
-          </View>
-        )}
 
-        {/* Comment Input */}
-        <View style={styles.inputContainer}>
-          <TextInput placeholder="Add a comment..." style={styles.input} />
-          <TouchableOpacity>
-            <Ionicons name="send-outline" size={24} style={styles.sendIcon} />
-          </TouchableOpacity>
-        </View>
+              {/* Post Text Content */}
+              <Text style={styles.content}>{post.content}</Text>
+
+              {/* Post Image */}
+              {post.image && (
+                <Image
+                  source={{ uri: post.image }} // Placeholder for the actual post image
+                  style={styles.postImage}
+                />
+              )}
+
+              {/* Likes and Comments Summary */}
+              <Text style={styles.likedBy}>{post.likes} Likes</Text>
+
+              {/* Post Actions */}
+              <View style={styles.postActions}>
+                <TouchableOpacity style={styles.actionButton} onPress={() => handleLike(post.id)}>
+                  <Ionicons name="thumbs-up-outline" size={18} />
+                  <Text style={styles.actionText}>Like</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.actionButton}
+                  onPress={() => handleCommentToggle(post.id)}
+                >
+                  <Ionicons name="chatbubble-outline" size={18} />
+                  <Text style={styles.actionText}>Comment</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton}>
+                  <Ionicons name="share-outline" size={18} />
+                  <Text style={styles.actionText}>Share</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Comments Section */}
+              {selectedPostId === post.id && (
+                <View style={styles.commentsContainer}>
+                  {post.commentsData?.map((comment) => (
+                    <View key={comment.id} style={styles.commentContainer}>
+                      <Image
+                        source={{ uri: comment.avatar }} // Replace with actual comment author avatar
+                        style={styles.commentAvatar}
+                      />
+                      <View style={styles.commentContent}>
+                        <Text style={styles.commentUsername}>{comment.username}</Text>
+                        <Text style={styles.commentText}>{comment.text}</Text>
+                        <View style={styles.commentActions}>
+                          <TouchableOpacity>
+                            <Ionicons name="thumbs-up-outline" size={18} />
+                          </TouchableOpacity>
+                          <Text style={styles.commentActionText}>{comment.likes} Likes</Text>
+                        </View>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Comment Input */}
+              {selectedPostId === post.id && (
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    placeholder="Add a comment..."
+                    style={styles.input}
+                    value={newComment}
+                    onChangeText={setNewComment}
+                  />
+                  <TouchableOpacity onPress={() => handleSendComment(post.id)}>
+                    <Ionicons name="send-outline" size={24} style={styles.sendIcon} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  // Your existing styles remain the same
   container: {
     flex: 1,
     backgroundColor: '#fff',

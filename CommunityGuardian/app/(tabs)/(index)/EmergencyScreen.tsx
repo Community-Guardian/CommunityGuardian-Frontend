@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import call from 'react-native-phone-call';
+import SendSMS from 'react-native-sms'; // Import SMS library
+import { useAuth } from '@/context/AuthContext'; // Assuming you are using AuthContext to manage user and contacts
 
 const emergencyServicesData = [
   { id: '1', name: 'Emergency 112', icon: 'call', alertText: 'Call Emergency 112', phone: '112' },
@@ -31,6 +33,10 @@ const EmergencyScreen = () => {
   const [selectedService, setSelectedService] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [timer, setTimer] = useState(5);
+  const [isSos, setIsSos] = useState(false); // State to differentiate between SOS and emergency services
+  const { user } = useAuth(); // Get the user and contacts from context
+
+  const emergencyContacts = user.emergency_contacts; // Assuming emergency_contacts is part of user data
 
   const requestCallPermission = async () => {
     if (Platform.OS === 'android') {
@@ -46,7 +52,7 @@ const EmergencyScreen = () => {
       );
       return granted === PermissionsAndroid.RESULTS.GRANTED;
     } else {
-      return true; // iOS doesn't require explicit permission for the phone call
+      return true; // iOS doesn't require explicit permission for phone calls
     }
   };
 
@@ -54,33 +60,71 @@ const EmergencyScreen = () => {
     setSelectedService(service);
     setModalVisible(true);
     setTimer(5); // Reset timer for every modal open
+    setIsSos(false); // Not an SOS, so set it to false
+  };
+
+  const handleSendSMS = () => {
+    if (emergencyContacts.length > 0) {
+      const contactNumber = emergencyContacts[0].phone_number; // Get the phone number of the first emergency contact
+      const message = 'I am in danger. Please send help!'; // Customize the SOS message
+
+      SendSMS.send(
+        {
+          body: message,
+          recipients: [contactNumber], // Send to the emergency contact's phone number
+          successTypes: ['sent', 'queued'],
+          allowAndroidSendWithoutReadPermission: true,
+        },
+        (completed, cancelled, error) => {
+          if (completed) {
+            console.log('SMS Sent Successfully');
+          } else if (cancelled) {
+            console.log('SMS Cancelled');
+          } else if (error) {
+            console.log('Error Sending SMS', error);
+          }
+        }
+      );
+    } else {
+      Alert.alert('No Emergency Contact', 'Please add an emergency contact.');
+    }
   };
 
   const handleConfirmPress = async () => {
-    const hasPermission = await requestCallPermission();
-    if (hasPermission && selectedService) {
-      const callArgs = {
-        number: selectedService.phone, // Use the phone number from the selected service
-        prompt: false, // Will prompt the user for confirmation
-      };
-      call(callArgs).catch(console.error); // Make the phone call
-      setModalVisible(false);
-    } else {
-      Alert.alert('Permission Denied', 'Permission to make phone calls is required.');
+    if (isSos) {
+      handleSendSMS(); // Send the SOS message if SOS is pressed
+    } else if (selectedService) {
+      const hasPermission = await requestCallPermission();
+      if (hasPermission) {
+        const callArgs = {
+          number: selectedService.phone,
+          prompt: false, // Will prompt the user for confirmation
+        };
+        call(callArgs).catch(console.error); // Make the phone call
+      } else {
+        Alert.alert('Permission Denied', 'Permission to make phone calls is required.');
+      }
     }
+    setModalVisible(false); // Close the modal after the action
+  };
+
+  const handleSosPress = () => {
+    setIsSos(true); // Set it to SOS mode
+    setModalVisible(true);
+    setTimer(5); // Reset the timer
   };
 
   const closeModal = () => {
     setModalVisible(false);
   };
 
-  // Timer to automatically confirm emergency after 5 seconds
+  // Timer to automatically confirm the action after 5 seconds
   useEffect(() => {
     if (modalVisible && timer > 0) {
       const countdown = setTimeout(() => setTimer(timer - 1), 1000);
       return () => clearTimeout(countdown);
     } else if (timer === 0) {
-      handleConfirmPress();
+      handleConfirmPress(); // Auto confirm when the timer reaches 0
     }
   }, [modalVisible, timer]);
 
@@ -88,7 +132,7 @@ const EmergencyScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         {/* SOS Button */}
-        <TouchableOpacity style={styles.sosButton}>
+        <TouchableOpacity style={styles.sosButton} onPress={handleSosPress}>
           <Text style={styles.sosText}>SOS</Text>
         </TouchableOpacity>
 
@@ -119,27 +163,25 @@ const EmergencyScreen = () => {
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
-            {selectedService && (
-              <>
-                <Text style={styles.modalTitle}>Confirm Emergency</Text>
-                <Text style={styles.modalText}>
-                  Are you sure you want to {selectedService.alertText}?
-                </Text>
-                <Text style={styles.timerText}>Auto-confirming in {timer} seconds...</Text>
-                <Pressable
-                  style={[styles.button, styles.confirmButton]}
-                  onPress={handleConfirmPress}
-                >
-                  <Text style={styles.textStyle}>Yes</Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.button, styles.cancelButton]}
-                  onPress={closeModal}
-                >
-                  <Text style={styles.textStyle}>No</Text>
-                </Pressable>
-              </>
-            )}
+            <Text style={styles.modalTitle}>Confirm Emergency</Text>
+            <Text style={styles.modalText}>
+              {isSos
+                ? 'Are you sure you want to trigger the SOS emergency?'
+                : `Are you sure you want to ${selectedService?.alertText}?`}
+            </Text>
+            <Text style={styles.timerText}>Auto-confirming in {timer} seconds...</Text>
+            <Pressable
+              style={[styles.button, styles.confirmButton]}
+              onPress={handleConfirmPress}
+            >
+              <Text style={styles.textStyle}>Yes</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.button, styles.cancelButton]}
+              onPress={closeModal}
+            >
+              <Text style={styles.textStyle}>No</Text>
+            </Pressable>
           </View>
         </View>
       </Modal>

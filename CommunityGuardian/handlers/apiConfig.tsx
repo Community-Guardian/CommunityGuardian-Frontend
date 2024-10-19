@@ -1,5 +1,5 @@
 // const BASE_URL = 'http://127.0.0.1:80';
-const BASE_URL = 'http://192.168.0.105:80';
+const BASE_URL = 'http://172.16.105.74:8001';
 // const BASE_URL = 'http://lemur-neutral-subtly.ngrok-free.app';
 // const BASE_URL = 'https://nrad8394.pythonanywhere.com';
 
@@ -20,5 +20,10 @@ export const CREATE_REPORT_URL = `${BASE_URL}/reports/`;
 export const GET_REPORTS_URL = `${BASE_URL}/reports/`;
 export const UPDATE_REPORT_URL = `${BASE_URL}/reports/{id}/`;
 export const DELETE_REPORT_URL = `${BASE_URL}/reports/{id}/`;
+// apiConfig.tsx
+export const GET_POSTS_URL = `${BASE_URL}/posts/`;
+export const GET_COMMENTS_URL = `${BASE_URL}/comments/`;
+export const CREATE_COMMENT_URL = `${BASE_URL}/comments/`;
+export const GET_REWARDS_URL = `${BASE_URL}/rewards/`;
 
 export { BASE_URL }

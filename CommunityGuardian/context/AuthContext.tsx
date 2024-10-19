@@ -9,6 +9,10 @@ import {
   getEmergencyContact, // Import the getEmergencyContact function
   updateEmergencyContact,
   deleteEmergencyContact,
+  getPosts, 
+  getComments, 
+  createComment,
+  getRewards 
 } from '@/handlers/api'; 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -23,6 +27,10 @@ interface AuthContextData {
   createContact: (contactData: any) => Promise<void>; 
   updateContact: (contactId: string, contactData: any) => Promise<void>; 
   deleteContact: (contactId: string) => Promise<void>; 
+  getAllPosts: () => Promise<void>; // Add method to get all posts
+  getPostComments: (postId: string) => Promise<void>; // Add method to get comments of a post
+  createPostComment: (commentData: any) => Promise<void>; // Add method to create a comment
+  getRewards: () => Promise<void>; // Add method to get rewards
   loading: boolean;
 }
 
@@ -42,6 +50,10 @@ const AuthContext = createContext<AuthContextData>({
   createContact: async () => {}, 
   updateContact: async () => {}, 
   deleteContact: async () => {}, 
+  getAllPosts:  async () => {}, 
+  getPostComments:  async () => {}, 
+  createPostComment:  async () => {}, 
+  getRewards:  async () => {}, 
   loading: false,
 });
 
@@ -204,12 +216,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getContacts(); // Fetch emergency contacts on mount
   }, []);
 
+  const getAllPosts = async () => {
+    setLoading(true);
+    try {
+      const posts = await getPosts();
+      return posts; // Optionally set the posts in state if needed
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch comments for a specific post
+  const getPostComments = async (postId: string) => {
+    setLoading(true);
+    try {
+      const comments = await getComments(postId);
+      return comments; // Optionally set the comments in state if needed
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create a new comment
+  const createPostComment = async (commentData: any) => {
+    setLoading(true);
+    try {
+      const newComment = await createComment(commentData);
+      return newComment;
+    } catch (error) {
+      console.error('Error creating comment:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const getRewardsData = async () => {
+    setLoading(true);
+    try {
+      const rewards = await getRewards();
+      return rewards; // Return the rewards data
+    } catch (error) {
+      console.error('Error fetching rewards:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, signUp, logout, updateUser, createContact, updateContact, deleteContact, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated, login, signUp, logout, updateUser, createContact, updateContact, deleteContact,getAllPosts,  getPostComments,createPostComment,getRewards, loading }}>
       {children}
     </AuthContext.Provider>
   );
 };
+
+
 
 // Hook to use the AuthContext
 export const useAuth = () => useContext(AuthContext);

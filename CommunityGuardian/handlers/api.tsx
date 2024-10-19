@@ -15,7 +15,11 @@ import {
   CREATE_REPORT_URL,    // Add this line for the new report endpoint
   GET_REPORTS_URL,      // Add this line for fetching reports
   UPDATE_REPORT_URL,    // Add this line for updating reports
-  DELETE_REPORT_URL     // Add this line for deleting reports
+  DELETE_REPORT_URL  ,   // Add this line for deleting reports
+  GET_POSTS_URL,
+  GET_COMMENTS_URL,
+  CREATE_COMMENT_URL,
+  GET_REWARDS_URL,
 
 } from './apiConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -243,3 +247,46 @@ export const DeleteReport = async (reportId: string) => {
   }
 };
 
+// api.tsx
+
+// Fetch all posts
+export const getPosts = async () => {
+  try {
+    const response = await api.get(GET_POSTS_URL);
+    return response.data;
+  } catch (error) {
+    handleApiError(error as AxiosError);
+  }
+};
+
+// Fetch all comments for a specific post
+export const getComments = async (postId: string) => {
+  try {
+    const url = `${GET_COMMENTS_URL}?post=${postId}`;
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    handleApiError(error as AxiosError);
+  }
+};
+
+// Create a new comment
+export const createComment = async (commentData: any) => {
+  try {
+    const response = await api.post(CREATE_COMMENT_URL, commentData);
+    return response.data;
+  } catch (error) {
+    handleApiError(error as AxiosError);
+  }
+};
+
+// Fetch all rewards
+export const getRewards = async () => {
+  try {
+    const response = await api.get(GET_REWARDS_URL);
+    return response.data;
+  } catch (error) {
+    handleApiError(error as AxiosError);
+    throw error;
+  }
+};

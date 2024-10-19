@@ -124,3 +124,4 @@ export const ReportProvider: React.FC<ReportProviderProps> = ({ children }) => {
 
 // Hook to use the ReportContext
 export const useReport = () => useContext(ReportContext);
+
