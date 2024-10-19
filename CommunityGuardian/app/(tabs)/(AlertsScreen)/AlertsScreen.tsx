@@ -5,17 +5,15 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 
 // TypeScript interface to represent the coordinates object
-// TypeScript interface to represent the coordinates object
 interface LocationObjectCoords {
-  latitude: number| null;
-  longitude: number| null;
-  altitude?: number | null;  // Allow null as a possible value
-  accuracy?: number| null;
-  altitudeAccuracy?: number| null;
-  heading?: number| null;
-  speed?: number| null;
+  latitude: number | null;
+  longitude: number | null;
+  altitude?: number | null;
+  accuracy?: number | null;
+  altitudeAccuracy?: number | null;
+  heading?: number | null;
+  speed?: number | null;
 }
-
 
 const AlertsScreen = () => {
   const [region, setRegion] = useState({
@@ -46,6 +44,7 @@ const AlertsScreen = () => {
       });
     })();
   }, []);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -63,102 +62,55 @@ const AlertsScreen = () => {
         region={region}  // Use the updated region from user location
         showsUserLocation={true}
       >
-<<<<<<< HEAD
-       
-<Marker
-  coordinate={{ latitude: -0.786, longitude: 37.666 }}
-  title="Kidnapping"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.8101, longitude: 37.1276 }}
-  title="Theft"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.6982, longitude: 36.9559 }}
-  title="Robbery"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.6775, longitude: 36.9562 }}
-  title="Murder"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.8221, longitude: 37.0931 }}
-  title="Assult"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.9321, longitude: 37.0284 }}
-  title="Robbery"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.9456, longitude: 37.2502 }}
-  title="Fraud"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.6833, longitude: 37.0239 }}
-  title="Cyber Crime"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.8149, longitude: 36.9692 }}
-  title="Murder"
-  description="Murang'a County"
-/>
-
-
-<Marker
-  coordinate={{ latitude: -0.9461, longitude: 37.1234 }}
-  title="Rape"
-  description="Murang'a County"
-/>
-
-      </MapView>
-=======
-        {/* Example Marker for Murang'a Town */}
         <Marker
           coordinate={{ latitude: -0.786, longitude: 37.666 }}
-          title="Murang'a Town"
+          title="Kidnapping"
           description="Murang'a County"
         />
->>>>>>> a76f0555a818f488b76c2e1fea4e0190236c4520
-
-        {/* Additional markers around Murang'a Town */}
         <Marker
-          coordinate={{ latitude: -0.790, longitude: 37.670 }}
-          title="Crime 1"
-          description="Description of Crime 1"
+          coordinate={{ latitude: -0.8101, longitude: 37.1276 }}
+          title="Theft"
+          description="Murang'a County"
         />
         <Marker
-          coordinate={{ latitude: -0.795, longitude: 37.660 }}
-          title="Crime 2"
-          description="Description of Crime 2"
+          coordinate={{ latitude: -0.6982, longitude: 36.9559 }}
+          title="Robbery"
+          description="Murang'a County"
         />
         <Marker
-          coordinate={{ latitude: -0.783, longitude: 37.680 }}
-          title="Crime 3"
-          description="Description of Crime 3"
+          coordinate={{ latitude: -0.6775, longitude: 36.9562 }}
+          title="Murder"
+          description="Murang'a County"
+        />
+        <Marker
+          coordinate={{ latitude: -0.8221, longitude: 37.0931 }}
+          title="Assault"
+          description="Murang'a County"
+        />
+        <Marker
+          coordinate={{ latitude: -0.9321, longitude: 37.0284 }}
+          title="Robbery"
+          description="Murang'a County"
+        />
+        <Marker
+          coordinate={{ latitude: -0.9456, longitude: 37.2502 }}
+          title="Fraud"
+          description="Murang'a County"
+        />
+        <Marker
+          coordinate={{ latitude: -0.6833, longitude: 37.0239 }}
+          title="Cyber Crime"
+          description="Murang'a County"
+        />
+        <Marker
+          coordinate={{ latitude: -0.8149, longitude: 36.9692 }}
+          title="Murder"
+          description="Murang'a County"
+        />
+        <Marker
+          coordinate={{ latitude: -0.9461, longitude: 37.1234 }}
+          title="Rape"
+          description="Murang'a County"
         />
       </MapView>
     </SafeAreaView>
@@ -194,106 +146,3 @@ const styles = StyleSheet.create({
 });
 
 export default AlertsScreen;
-
-// import React, { useState } from 'react';
-// import { View, StyleSheet } from 'react-native';
-// import MapView, { Marker, Region } from 'react-native-maps';
-// import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-
-// // Type for the selected location state
-// interface Location {
-//   latitude: number;
-//   longitude: number;
-//   title: string;
-// }
-
-// const GooglePlacesSearch: React.FC = () => {
-//   // Region type from react-native-maps defines the map's view region
-//   const [region, setRegion] = useState<Region>({
-//     latitude: -0.786, // Default latitude
-//     longitude: 37.666, // Default longitude
-//     latitudeDelta: 0.05,
-//     longitudeDelta: 0.05,
-//   });
-
-//   // Optional location object to hold the selected location details
-//   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
-
-//   const handlePlaceSelect = (data: any, details: any | null) => {
-//     if (details && details.geometry && details.geometry.location) {
-//       const { lat, lng } = details.geometry.location;
-
-//       // Update region state to move the map to the selected location
-//       setRegion({
-//         latitude: lat,
-//         longitude: lng,
-//         latitudeDelta: 0.05,
-//         longitudeDelta: 0.05,
-//       });
-
-//       // Set the selected location to place a marker
-//       setSelectedLocation({
-//         latitude: lat,
-//         longitude: lng,
-//         title: details.name,
-//       });
-//     }
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       {/* Google Places Autocomplete */}
-//       <GooglePlacesAutocomplete
-//         placeholder="Search for places"
-//         fetchDetails={true}  // Fetch details to get lat/lng
-//         onPress={handlePlaceSelect}
-//         query={{
-//           key: 'YOUR_GOOGLE_API_KEY',
-//           language: 'en',
-//           types: '(cities)', // Restrict to cities
-//           location: `${region.latitude},${region.longitude}`,
-//           radius: 10000, // 10 km radius
-//         }}
-//         styles={{
-//           container: {
-//             flex: 0,
-//             position: 'absolute',
-//             width: '100%',
-//             zIndex: 1,
-//             top: 10,
-//           },
-//           listView: {
-//             backgroundColor: 'white',
-//           },
-//         }}
-//       />
-
-//       {/* Map */}
-//       <MapView
-//         style={styles.map}
-//         region={region}
-//         showsUserLocation={true}
-//       >
-//         {selectedLocation && (
-//           <Marker
-//             coordinate={{
-//               latitude: selectedLocation.latitude,
-//               longitude: selectedLocation.longitude,
-//             }}
-//             title={selectedLocation.title}
-//           />
-//         )}
-//       </MapView>
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   map: {
-//     flex: 1,
-//   },
-// });
-
