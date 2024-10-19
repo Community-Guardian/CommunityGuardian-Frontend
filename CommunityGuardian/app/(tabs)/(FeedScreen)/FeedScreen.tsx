@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useAuth } from '@/context/AuthContext'; // Make sure this is the correct path
+import { useAuth } from '@/context/AuthContext';
 
 const FeedScreen = () => {
   const [posts, setPosts] = useState<any[]>([]); // To store posts
@@ -20,6 +20,7 @@ const FeedScreen = () => {
     }
   }, [isAuthenticated]);
 
+  // Fetch all posts from the backend
   const fetchPosts = async () => {
     try {
       const fetchedPosts = await getAllPosts(); // Fetch posts from backend
@@ -31,6 +32,7 @@ const FeedScreen = () => {
     }
   };
 
+  // Toggle and fetch comments for a specific post
   const handleCommentToggle = async (postId: string) => {
     if (selectedPostId === postId) {
       // If the same post is selected, close the comments section
@@ -49,6 +51,7 @@ const FeedScreen = () => {
     }
   };
 
+  // Send a new comment to the backend and fetch updated comments
   const handleSendComment = async (postId: string) => {
     if (newComment.trim()) {
       try {
@@ -70,6 +73,7 @@ const FeedScreen = () => {
     }
   };
 
+  // Handle liking a post (local increment of like count)
   const handleLike = async (postId: string) => {
     try {
       const updatedPosts = posts.map((post) =>
@@ -78,7 +82,7 @@ const FeedScreen = () => {
           : post
       );
       setPosts(updatedPosts);
-      // You should also send a request to the backend to persist the like (you can implement this in your backend API)
+      // Optionally send a request to the backend to persist the like
     } catch (error) {
       console.error('Error liking the post:', error);
     }
@@ -99,7 +103,7 @@ const FeedScreen = () => {
               {/* Header: Profile image, author, time */}
               <View style={styles.header}>
                 <Image
-                  source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtcPVdcIDUDATBrcMoTRUoE2f1OOPz_nIeag&s'}} // Replace with the actual author image URL
+                  source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtcPVdcIDUDATBrcMoTRUoE2f1OOPz_nIeag&s' }} // Replace with the actual author image URL
                   style={styles.avatar}
                 />
                 <View>
@@ -152,7 +156,7 @@ const FeedScreen = () => {
                       />
                       <View style={styles.commentContent}>
                         <Text style={styles.commentUsername}>{comment.username}</Text>
-                        <Text style={styles.commentText}>{comment.text}</Text>
+                        <Text style={styles.commentText}>{comment.content}</Text>
                         <View style={styles.commentActions}>
                           <TouchableOpacity>
                             <Ionicons name="thumbs-up-outline" size={18} />
@@ -188,7 +192,6 @@ const FeedScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  // Your existing styles remain the same
   container: {
     flex: 1,
     backgroundColor: '#fff',
