@@ -147,40 +147,41 @@ const FeedScreen = () => {
 
               {/* Comments Section */}
               {selectedPostId === post.id && (
-                <View style={styles.commentsContainer}>
-                  {post.commentsData?.map((comment) => (
-                    <View key={comment.id} style={styles.commentContainer}>
-                      <Image
-                        source={{ uri: comment.avatar }} // Replace with actual comment author avatar
-                        style={styles.commentAvatar}
-                      />
-                      <View style={styles.commentContent}>
-                        <Text style={styles.commentUsername}>{comment.username}</Text>
-                        <Text style={styles.commentText}>{comment.content}</Text>
-                        <View style={styles.commentActions}>
-                          <TouchableOpacity>
-                            <Ionicons name="thumbs-up-outline" size={18} />
-                          </TouchableOpacity>
-                          <Text style={styles.commentActionText}>{comment.likes} Likes</Text>
+                <View style={styles.commentsSection}>
+                  <Text style={styles.commentsTitle}>Comments</Text>
+                  <View style={styles.commentsContainer}>
+                    {post.commentsData?.map((comment) => (
+                      <View key={comment.id} style={styles.commentContainer}>
+                        <Image
+                          source={{ uri: comment.avatar }} // Replace with actual comment author avatar
+                          style={styles.commentAvatar}
+                        />
+                        <View style={styles.commentContent}>
+                          <Text style={styles.commentUsername}>{comment.username}</Text>
+                          <Text style={styles.commentText}>{comment.content}</Text>
+                          <View style={styles.commentActions}>
+                            <TouchableOpacity>
+                              <Ionicons name="thumbs-up-outline" size={18} />
+                            </TouchableOpacity>
+                            <Text style={styles.commentActionText}>{comment.likes} Likes</Text>
+                          </View>
                         </View>
                       </View>
-                    </View>
-                  ))}
-                </View>
-              )}
+                    ))}
+                  </View>
 
-              {/* Comment Input */}
-              {selectedPostId === post.id && (
-                <View style={styles.inputContainer}>
-                  <TextInput
-                    placeholder="Add a comment..."
-                    style={styles.input}
-                    value={newComment}
-                    onChangeText={setNewComment}
-                  />
-                  <TouchableOpacity onPress={() => handleSendComment(post.id)}>
-                    <Ionicons name="send-outline" size={24} style={styles.sendIcon} />
-                  </TouchableOpacity>
+                  {/* Comment Input */}
+                  <View style={styles.inputContainer}>
+                    <TextInput
+                      placeholder="Add a comment..."
+                      style={styles.input}
+                      value={newComment}
+                      onChangeText={setNewComment}
+                    />
+                    <TouchableOpacity onPress={() => handleSendComment(post.id)}>
+                      <Ionicons name="send-outline" size={24} style={styles.sendIcon} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
             </View>
@@ -251,14 +252,31 @@ const styles = StyleSheet.create({
     marginLeft: 5,
     fontSize: 14,
   },
+  commentsSection: {
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#ddd',
+    marginTop: 10,
+  },
+  commentsTitle: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5,
+    color: '#333',
+  },
   commentsContainer: {
     paddingHorizontal: 15,
     backgroundColor: '#f9f9f9',
+    borderRadius: 10,
+    paddingVertical: 10,
   },
   commentContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    paddingBottom: 10,
   },
   commentAvatar: {
     width: 40,
@@ -272,14 +290,17 @@ const styles = StyleSheet.create({
   commentUsername: {
     fontWeight: 'bold',
     fontSize: 14,
+    marginBottom: 2,
   },
   commentText: {
     fontSize: 14,
-    marginVertical: 5,
+    marginBottom: 5,
+    color: '#333',
   },
   commentActions: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 5,
   },
   commentActionText: {
     marginLeft: 5,
@@ -290,10 +311,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingVertical: 10,
+    marginTop: 10,
     borderTopWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
+    borderTopColor: '#ddd',
+    backgroundColor: '#f8f8f8',
+    borderRadius: 20,
   },
   input: {
     flex: 1,
