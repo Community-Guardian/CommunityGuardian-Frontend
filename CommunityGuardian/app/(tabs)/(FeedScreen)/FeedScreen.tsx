@@ -23,34 +23,42 @@ const FeedScreen = () => {
   // Fetch all posts from the backend
   const fetchPosts = async () => {
     try {
-      const fetchedPosts = await getAllPosts(); // Fetch posts from backend
-      setPosts(fetchedPosts);
+      const fetchedPosts = await getAllPosts();
+      const postsWithLikedState = fetchedPosts.map((post) => ({
+        ...post,
+        liked: false, // Initialize liked state
+      }));
+      setPosts(postsWithLikedState);
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
       setLoadingPosts(false);
     }
   };
+  
 
   // Toggle and fetch comments for a specific post
-  const handleCommentToggle = async (postId: string) => {
+  const handleCommentToggle = async (postId) => {
     if (selectedPostId === postId) {
-      // If the same post is selected, close the comments section
-      setSelectedPostId(null);
+      setSelectedPostId(null); // Close comments
     } else {
       try {
-        const comments = await getPostComments(postId); // Fetch comments for the post
+        const comments = await getPostComments(postId); // Fetch comments
+        const commentsWithLikeState = comments.map((comment) => ({
+          ...comment,
+          liked: false, // Initialize 'liked' state
+        }));
         const updatedPosts = posts.map((post) =>
-          post.id === postId ? { ...post, commentsData: comments } : post
+          post.id === postId ? { ...post, commentsData: commentsWithLikeState } : post
         );
         setPosts(updatedPosts);
-        setSelectedPostId(postId); // Set the selected post ID to show its comments
+        setSelectedPostId(postId); // Open comments
       } catch (error) {
         console.error('Error fetching comments:', error);
       }
     }
   };
-
+  
   // Send a new comment to the backend and fetch updated comments
   const handleSendComment = async (postId: string) => {
     if (newComment.trim()) {
@@ -73,21 +81,40 @@ const FeedScreen = () => {
     }
   };
 
+// Toggle like state for a comment
+const handleLikeComment = (postId, commentId) => {
+  const updatedPosts = posts.map((post) => {
+    if (post.id === postId) {
+      const updatedComments = post.commentsData.map((comment) =>
+        comment.id === commentId
+          ? { ...comment, liked: !comment.liked } // Toggle 'liked' state
+          : comment
+      );
+      return { ...post, commentsData: updatedComments };
+    }
+    return post;
+  });
+  setPosts(updatedPosts);
+};
+
   // Handle liking a post (local increment of like count)
   const handleLike = async (postId: string) => {
     try {
       const updatedPosts = posts.map((post) =>
         post.id === postId
-          ? { ...post, likes: post.likes + 1 } // Increment the like count locally
+          ? {
+              ...post,
+              liked: !post.liked, // Toggle the 'liked' state
+              likes: post.liked ? post.likes - 1 : post.likes + 1, // Adjust like count
+            }
           : post
       );
-      setPosts(updatedPosts);
-      // Optionally send a request to the backend to persist the like
+      setPosts(updatedPosts); // Update the posts state
     } catch (error) {
       console.error('Error liking the post:', error);
     }
   };
-
+  
   if (!isAuthenticated) {
     return null; // Avoid rendering anything if not authenticated
   }
@@ -124,51 +151,71 @@ const FeedScreen = () => {
               )}
 
               {/* Likes and Comments Summary */}
-              <Text style={styles.likedBy}>{post.likes} Likes</Text>
+              {/* <Text style={styles.likedBy}>{post.likes} Likes</Text> */}
 
               {/* Post Actions */}
               <View style={styles.postActions}>
-                <TouchableOpacity style={styles.actionButton} onPress={() => handleLike(post.id)}>
-                  <Ionicons name="thumbs-up-outline" size={18} />
-                  <Text style={styles.actionText}>Like</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.actionButton}
-                  onPress={() => handleCommentToggle(post.id)}
-                >
-                  <Ionicons name="chatbubble-outline" size={18} />
-                  <Text style={styles.actionText}>Comment</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.actionButton}>
-                  <Ionicons name="share-outline" size={18} />
-                  <Text style={styles.actionText}>Share</Text>
-                </TouchableOpacity>
-              </View>
+  <TouchableOpacity
+    style={styles.actionButton}
+    onPress={() => handleLike(post.id)}
+  >
+    <Ionicons
+      name="heart-outline"
+      size={18}
+      color={post.liked ? 'red' : 'black'} // Change color based on 'liked' state
+    />
+    <Text style={[styles.actionText, { color: post.liked ? 'red' : 'black' }]}>
+      {post.liked ? 'Liked' : 'Like'}
+    </Text>
+  </TouchableOpacity>
+  <TouchableOpacity
+    style={styles.actionButton}
+    onPress={() => handleCommentToggle(post.id)}
+  >
+    <Ionicons name="chatbubble-outline" size={18} />
+    <Text style={styles.actionText}>Comment</Text>
+  </TouchableOpacity>
+  <TouchableOpacity style={styles.actionButton}>
+    <Ionicons name="share-outline" size={18} />
+    <Text style={styles.actionText}>Share</Text>
+  </TouchableOpacity>
+</View>
 
               {/* Comments Section */}
               {selectedPostId === post.id && (
                 <View style={styles.commentsSection}>
                   <Text style={styles.commentsTitle}>Comments</Text>
                   <View style={styles.commentsContainer}>
-                    {post.commentsData?.map((comment) => (
-                      <View key={comment.id} style={styles.commentContainer}>
-                        <Image
-                          source={{ uri: comment.avatar }} // Replace with actual comment author avatar
-                          style={styles.commentAvatar}
-                        />
-                        <View style={styles.commentContent}>
-                          <Text style={styles.commentUsername}>{comment.username}</Text>
-                          <Text style={styles.commentText}>{comment.content}</Text>
-                          <View style={styles.commentActions}>
-                            <TouchableOpacity>
-                              <Ionicons name="thumbs-up-outline" size={18} />
-                            </TouchableOpacity>
-                            <Text style={styles.commentActionText}>{comment.likes} Likes</Text>
-                          </View>
-                        </View>
-                      </View>
-                    ))}
-                  </View>
+  
+                  {post.commentsData?.map((comment) => (
+  <View key={comment.id} style={styles.commentContainer}>
+    {/* Avatar */}
+    <Image
+      source={{ uri: comment.avatar }} // Replace with actual comment author avatar
+      style={styles.commentAvatar}
+    />
+    {/* Content and Like Icon */}
+    <View style={styles.commentRow}>
+      <View style={styles.commentContent}>
+        <Text style={styles.commentUsername}>{comment.username}</Text>
+        <Text style={styles.commentText}>{comment.content}</Text>
+      </View>
+      <TouchableOpacity
+        onPress={() => handleLikeComment(post.id, comment.id)}
+        style={styles.likeButton}
+      >
+        <Ionicons
+          name="heart-outline"
+          size={18}
+          color={comment.liked ? 'red' : 'black'} // Change color based on 'liked' state
+        />
+      </TouchableOpacity>
+    </View>
+  </View>
+))}
+
+
+</View>
 
                   {/* Comment Input */}
                   <View style={styles.inputContainer}>
@@ -271,7 +318,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   commentContainer: {
-    flexDirection: 'row',
+    flexDirection: 'row', // Align avatar and text in a row
     alignItems: 'flex-start',
     marginBottom: 10,
     borderBottomWidth: 1,
@@ -300,8 +347,9 @@ const styles = StyleSheet.create({
   commentActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 5,
+    justifyContent: 'flex-start', // Align items horizontally
   },
+  
   commentActionText: {
     marginLeft: 5,
     fontSize: 12,
