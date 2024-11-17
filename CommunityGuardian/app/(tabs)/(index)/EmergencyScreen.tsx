@@ -62,12 +62,13 @@ const EmergencyScreen = () => {
     setTimer(5); // Reset timer for every modal open
     setIsSos(false); // Not an SOS, so set it to false
   };
-
   const handleSendSMS = () => {
-    if (emergencyContacts.length > 0) {
+    if (emergencyContacts && emergencyContacts.length > 0) {
       const contactNumber = emergencyContacts[0].phone_number; // Get the phone number of the first emergency contact
       const message = 'I am in danger. Please send help!'; // Customize the SOS message
-
+  
+      console.log(`Sending SMS to: ${contactNumber} with message: ${message}`);  // Debugging log
+  
       SendSMS.send(
         {
           body: message,
@@ -86,9 +87,11 @@ const EmergencyScreen = () => {
         }
       );
     } else {
+      console.log('No emergency contacts found'); // Debugging log
       Alert.alert('No Emergency Contact', 'Please add an emergency contact.');
     }
   };
+  
 
   const handleConfirmPress = async () => {
     if (isSos) {
