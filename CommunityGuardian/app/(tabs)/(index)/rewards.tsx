@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   SafeAreaView,
   View,
@@ -9,10 +9,8 @@ import {
   Image,
   Modal,
   Pressable,
-  ActivityIndicator, // To display loading indicator
+  Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '@/context/AuthContext'; // Import the AuthContext
 
 interface Reward {
   id: string;
@@ -23,39 +21,37 @@ interface Reward {
 }
 
 const RewardsScreen = () => {
-  const [rewards, setRewards] = useState<Reward[]>([]); // State to store rewards
-  const [loading, setLoading] = useState(true); // State to manage loading
-  const [selectedReward, setSelectedReward] = useState<Reward | null>(null); // State to manage selected reward
-  const [modalVisible, setModalVisible] = useState(false); // Modal visibility
-  const { getRewards } = useAuth(); // Fetch getRewards function from AuthContext
-
-  useEffect(() => {
-    const fetchRewards = async () => {
-      try {
-        const rewardsData = await getRewards(); // Fetch rewards from backend
-        setRewards(rewardsData); // Update rewards state
-      } catch (error) {
-        console.error('Error fetching rewards:', error);
-      } finally {
-        setLoading(false); // Stop loading indicator
-      }
-    };
-
-    fetchRewards(); // Fetch rewards when component mounts
-  }, []);
+  const [rewards, setRewards] = useState<Reward[]>([
+    {
+      id: '2',
+      name: 'Mark Njoroge',
+      amount: '$300',
+      image: 'https://static.propublica.org/projects/algorithmic-bias/assets/img/generated/Robert-Cannon-mugshot2-270*360-c88b61.jpg',
+      description: 'Reward for anyone who provides information about the criminal who escaped police custody and is wanted for rape and murder.',
+    },
+    {
+      id: '4',
+      name: 'Stolen Car',
+      amount: '$1000',
+      image: 'https://bammtours.co.ke/wp-content/uploads/2021/04/Prestige-car-hire-Kenya..jpg',
+      description: 'Reward for information leading to the recovery of the stolen car KCK 214H Toyota TX.',
+    },
+  ]);
+  const [selectedReward, setSelectedReward] = useState<Reward | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const handleCardPress = (reward: Reward) => {
     setSelectedReward(reward);
     setModalVisible(true);
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
+  const handleContact = () => {
+    setModalVisible(false);
+    Alert.alert(
+      'Contact Successful',
+      'The concerned person has been successfully contacted. Thank you for your assistance!'
     );
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,7 +59,6 @@ const RewardsScreen = () => {
         Relevant information regarding the whereabouts of the persons of interest will be rewarded as per terms.
       </Text>
 
-      {/* Grid View */}
       <FlatList
         data={rewards}
         keyExtractor={(item) => item.id}
@@ -81,14 +76,11 @@ const RewardsScreen = () => {
         )}
       />
 
-      {/* Modal for Reward Details */}
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(!modalVisible);
-        }}
+        onRequestClose={() => setModalVisible(!modalVisible)}
       >
         <View style={styles.modalBackground}>
           <View style={styles.modalContainer}>
@@ -100,8 +92,14 @@ const RewardsScreen = () => {
                 <Text style={styles.modalContact}>Reward: {selectedReward.amount}</Text>
 
                 <Pressable
+                  style={[styles.button, styles.buttonContact]}
+                  onPress={handleContact}
+                >
+                  <Text style={styles.textStyle}>Contact</Text>
+                </Pressable>
+                <Pressable
                   style={[styles.button, styles.buttonClose]}
-                  onPress={() => setModalVisible(!modalVisible)}
+                  onPress={() => setModalVisible(false)}
                 >
                   <Text style={styles.textStyle}>Close</Text>
                 </Pressable>
@@ -191,6 +189,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
     elevation: 2,
+    marginVertical: 5,
+    width: '100%',
+    alignItems: 'center',
+  },
+  buttonContact: {
+    backgroundColor: '#4caf50',
   },
   buttonClose: {
     backgroundColor: '#2196F3',
@@ -199,11 +203,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  loader: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

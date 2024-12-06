@@ -1,26 +1,30 @@
 import React, { useState } from 'react';
-import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Switch, Platform, Alert } from 'react-native';
+import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Switch, Alert, Clipboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as DocumentPicker from 'expo-document-picker'; 
+import * as DocumentPicker from 'expo-document-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Picker } from '@react-native-picker/picker';
-import { useReport } from '@/context/ReportContext';
+
+// Simulating an email sending function
+const sendEmailNotification = (orbNumber: string) => {
+  // Here you would integrate your email service (e.g., SendGrid, SMTP server)
+  console.log(`ORB Number: ${orbNumber} sent to user via email.`);
+};
 
 export default function ReportCrimeScreen() {
-  const { createReport } = useReport(); // Use ReportContext for submitting the report
-  const [crimeType, setCrimeType] = useState<string>(''); // Type as string
-  const [description, setDescription] = useState<string>(''); // Type as string
-  const [location, setLocation] = useState<string>(''); // New location input state, typed as string
-  const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerResult | null>(null); // Using DocumentPickerResult type from the latest expo-document-picker
-  const [role, setRole] = useState<string>(''); // Updated to string for dropdown
-  const [isTermsAccepted, setIsTermsAccepted] = useState<boolean>(false); // Boolean type for switch
-  const [date, setDate] = useState<Date>(new Date()); // Use Date type for date
-  const [time, setTime] = useState<Date>(new Date()); // Use Date type for time
+  const [crimeType, setCrimeType] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [location, setLocation] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<DocumentPicker.DocumentPickerResult | null>(null);
+  const [role, setRole] = useState<string>('');
+  const [isTermsAccepted, setIsTermsAccepted] = useState<boolean>(false);
+  const [date, setDate] = useState<Date>(new Date());
+  const [time, setTime] = useState<Date>(new Date());
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [showTimePicker, setShowTimePicker] = useState<boolean>(false);
 
-  const crimeTypes = ['burglary', 'assault', 'theft', 'vandalism', 'fraud', 'other']; // Crime types for the dropdown
-  const roles = ['victim', 'witness', 'perpetrator', 'anonymous']; // Role options
+  const crimeTypes = ['burglary', 'assault', 'theft', 'vandalism', 'fraud', 'other'];
+  const roles = ['victim', 'witness', 'perpetrator', 'anonymous'];
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
     const currentDate = selectedDate || date;
@@ -34,24 +38,18 @@ export default function ReportCrimeScreen() {
     setTime(currentTime);
   };
 
-  // Enhanced file upload handler with validation
   const handleFileUpload = async () => {
     try {
       const file = await DocumentPicker.getDocumentAsync({
-        type: '*/*', // Allowing all file types
-        copyToCacheDirectory: true, // Ensures file is cached for processing
-        multiple: false, // We are selecting only one file at a time
+        type: '*/*',
+        copyToCacheDirectory: true,
+        multiple: false,
       });
-      console.log(file);
-      
-      // Check if the file selection was successful
-      if (!file.canceled) {
-        // Set the selected file
-        setSelectedFile(file);
 
+      if (!file.canceled) {
+        setSelectedFile(file);
         Alert.alert('File Selected', `File Name: ${file.assets[0].name}`);
       } else {
-        // Handle cancellation if needed
         Alert.alert('Cancelled', 'No file selected.');
       }
     } catch (error) {
@@ -60,43 +58,49 @@ export default function ReportCrimeScreen() {
     }
   };
 
-  // Submission handler
+  const generateORBNumber = () => {
+    return `ORB-${Math.floor(Math.random() * 1000000)}`;
+  };
+
   const handleSubmit = async () => {
     if (!crimeType || !description || !role || !location || !isTermsAccepted) {
       Alert.alert('Error', 'Please fill out all fields and agree to the terms before submitting.');
       return;
     }
 
-    const formData = new FormData();
-    formData.append('crime_type', crimeType);
-    formData.append('description', description);
-    formData.append('date', date.toISOString().split('T')[0]); // Convert date to YYYY-MM-DD format
-    formData.append('time', time.toTimeString().split(' ')[0]); // Convert time to HH:MM:SS format
-    formData.append('who_am_i', role);
-    formData.append('location', location);
+    const orbNumber = generateORBNumber();
+    
+    // Simulate successful report submission
+    Alert.alert(
+      'Success',
+      `Your report has been submitted. Your ORB number is: ${orbNumber}`,
+      [
+        { text: 'Copy ORB Number', onPress: () => { 
+          Clipboard.setString(orbNumber); 
+          clearForm(); // Clear form after copying
+        }},
+        { text: 'OK', onPress: () => {
+          clearForm(); // Clear form after confirmation
+          sendEmailNotification(orbNumber); // Send ORB number to the user's email
+        }}
+      ]
+    );
+  };
 
-    // Append file if selected and the file contains a URI (successfully picked)
-    if (selectedFile && !selectedFile.canceled) {
-      const fileData = {
-        uri: selectedFile.assets[0].uri,
-        name: selectedFile.assets[0].name,
-        type: selectedFile.assets[0].mimeType || 'application/octet-stream', // Default to octet-stream if mimeType is not available
-      };
-      formData.append('file_upload', fileData as any);
-    }
-
-    try {
-      await createReport(formData); // Submit the report to the backend
-      Alert.alert('Success', 'Your report has been submitted.');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to submit the report. Please try again.');
-    }
+  const clearForm = () => {
+    setCrimeType('');
+    setDescription('');
+    setLocation('');
+    setSelectedFile(null);
+    setRole('');
+    setIsTermsAccepted(false);
+    setDate(new Date());
+    setTime(new Date());
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {/* Location Input Section */}
         <TextInput
           style={styles.input}
           placeholder="Enter Location of Incident"
@@ -104,7 +108,6 @@ export default function ReportCrimeScreen() {
           onChangeText={setLocation}
         />
 
-        {/* Date and Time Selection */}
         <View style={styles.timeDateSection}>
           <TouchableOpacity style={styles.timeDateButton} onPress={() => setShowTimePicker(true)}>
             <Text style={styles.buttonText}>Select time</Text>
@@ -134,13 +137,11 @@ export default function ReportCrimeScreen() {
           )}
         </View>
 
-        {/* Display selected Date and Time */}
         <View style={styles.selectedDateTimeContainer}>
           <Text style={styles.selectedDateTimeText}>Selected Time: {time.toLocaleTimeString()}</Text>
           <Text style={styles.selectedDateTimeText}>Selected Date: {date.toDateString()}</Text>
         </View>
 
-        {/* Crime Type Dropdown */}
         <View style={styles.dropdown}>
           <Text style={styles.dropdownLabel}>Crime Type</Text>
           <Picker
@@ -155,7 +156,6 @@ export default function ReportCrimeScreen() {
           </Picker>
         </View>
 
-        {/* Description Input */}
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="Enter Description"
@@ -164,17 +164,15 @@ export default function ReportCrimeScreen() {
           multiline
         />
 
-        {/* File Upload Section */}
         <TouchableOpacity style={styles.uploadButton} onPress={handleFileUpload}>
           <Ionicons name="camera-outline" size={20} color="white" />
           <Text style={styles.uploadButtonText}>Enter Media Evidence/files</Text>
         </TouchableOpacity>
 
-        {selectedFile && !selectedFile.canceled&& (
+        {selectedFile && !selectedFile.canceled && (
           <Text style={styles.fileName}>Selected File: {selectedFile?.assets[0]?.name}</Text>
         )}
 
-        {/* Role Selection Dropdown */}
         <View style={styles.dropdown}>
           <Text style={styles.dropdownLabel}>I am the:</Text>
           <Picker
@@ -189,7 +187,6 @@ export default function ReportCrimeScreen() {
           </Picker>
         </View>
 
-        {/* Terms and Conditions */}
         <View style={styles.termsContainer}>
           <Switch
             value={isTermsAccepted}
@@ -201,7 +198,6 @@ export default function ReportCrimeScreen() {
           </Text>
         </View>
 
-        {/* Submit Button */}
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitButtonText}>Submit</Text>
         </TouchableOpacity>

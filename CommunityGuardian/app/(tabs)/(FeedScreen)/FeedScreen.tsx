@@ -1,239 +1,215 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, ScrollView, TextInput, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@/context/AuthContext';
 
 const FeedScreen = () => {
-  const [posts, setPosts] = useState<any[]>([]); // To store posts
-  const [loadingPosts, setLoadingPosts] = useState(true);
-  const [newComment, setNewComment] = useState(''); // For the new comment input
-  const [selectedPostId, setSelectedPostId] = useState<string | null>(null); // For tracking the post to add a comment
-  const { isAuthenticated, getAllPosts, getPostComments, createPostComment } = useAuth(); // Access the auth state and API functions
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.replace('/(auth)/Login'); // Redirect to login if not authenticated
-    } else {
-      fetchPosts(); // Fetch posts when authenticated
-    }
-  }, [isAuthenticated]);
-
-  // Fetch all posts from the backend
-  const fetchPosts = async () => {
-    try {
-      const fetchedPosts = await getAllPosts();
-      const postsWithLikedState = fetchedPosts.map((post) => ({
-        ...post,
-        liked: false, // Initialize liked state
-      }));
-      setPosts(postsWithLikedState);
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-    } finally {
-      setLoadingPosts(false);
-    }
-  };
+  // Dummy data for posts, now only admin can post
+  const [posts, setPosts] = useState([
+    {
+      id: '1',
+      author: 'admin', // Admin is hardcoded here
+      time: '2 hours ago',
+      content: 'Engage in the Vote: Impeachment Motion for DP Rigathi Gachagua. What are your views?',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRiiymV6QYTxA6K74SYSxjwDzEjcW7NruVizisXIm2KYk8VAaisyz6RZCcC09fVUPU_ueA&usqp=CAU',
+      likes: 10,
+      liked: false,
+      commentsData: [
+        {
+          id: '1',
+          username: 'Kelvin', // Admin is hardcoded here as well
+          content: 'Great post!',
+          liked: false,
+        },
+        {
+          id: '2',
+          username: 'Kelvin', // Admin is hardcoded for comment
+          content: 'Totally agree!',
+          liked: false,
+        },
+      ],
+    },
+    {
+      id: '2',
+      author: 'admin', // Admin is hardcoded here
+      time: '1 day ago',
+      content: 'Engage in the Discussion: Should the Kenyan Presidential Term Be Extended to 7 Years?',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRbcMWiCWl8ZHjFL7WLjFM8V4A8oCbGN2hm-Q&s',
+      likes: 5,
+      liked: false,
+      commentsData: [
+        {
+          id: '3',
+          username: 'Kelvin', // Admin is hardcoded here as well
+          content: 'This looks awesome!',
+          liked: false,
+        },
+      ],
+    },
+  ]);
   
+  const [newComment, setNewComment] = useState('');
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null); // For tracking the post to add a comment
+
+  // Handle liking a post (local increment of like count)
+  const handleLike = (postId: string) => {
+    const updatedPosts = posts.map((post) =>
+      post.id === postId
+        ? {
+            ...post,
+            liked: !post.liked, // Toggle the 'liked' state
+            likes: post.liked ? post.likes - 1 : post.likes + 1, // Adjust like count
+          }
+        : post
+    );
+    setPosts(updatedPosts); // Update the posts state
+  };
 
   // Toggle and fetch comments for a specific post
-  const handleCommentToggle = async (postId) => {
+  const handleCommentToggle = (postId) => {
     if (selectedPostId === postId) {
       setSelectedPostId(null); // Close comments
     } else {
-      try {
-        const comments = await getPostComments(postId); // Fetch comments
-        const commentsWithLikeState = comments.map((comment) => ({
-          ...comment,
-          liked: false, // Initialize 'liked' state
-        }));
-        const updatedPosts = posts.map((post) =>
-          post.id === postId ? { ...post, commentsData: commentsWithLikeState } : post
-        );
-        setPosts(updatedPosts);
-        setSelectedPostId(postId); // Open comments
-      } catch (error) {
-        console.error('Error fetching comments:', error);
-      }
+      setSelectedPostId(postId); // Open comments
     }
   };
-  
-  // Send a new comment to the backend and fetch updated comments
-  const handleSendComment = async (postId: string) => {
+
+  // Send a new comment to the post
+  const handleSendComment = (postId: string) => {
     if (newComment.trim()) {
-      try {
-        const commentData = {
-          post: postId,
-          content: newComment,
-        };
-        await createPostComment(commentData); // Send the comment to the backend
-        // Fetch the updated comments after posting
-        const updatedComments = await getPostComments(postId);
-        const updatedPosts = posts.map((post) =>
-          post.id === postId ? { ...post, commentsData: updatedComments } : post
+      const updatedPosts = posts.map((post) => {
+        if (post.id === postId) {
+          const newCommentData = {
+            id: (post.commentsData.length + 1).toString(),
+            username: 'admin', // Admin is hardcoded here as well
+            content: newComment,
+            liked: false,
+          };
+          return { ...post, commentsData: [...post.commentsData, newCommentData] };
+        }
+        return post;
+      });
+      setPosts(updatedPosts);
+      setNewComment(''); // Clear the input
+    }
+  };
+
+  // Toggle like state for a comment
+  const handleLikeComment = (postId, commentId) => {
+    const updatedPosts = posts.map((post) => {
+      if (post.id === postId) {
+        const updatedComments = post.commentsData.map((comment) =>
+          comment.id === commentId
+            ? { ...comment, liked: !comment.liked } // Toggle 'liked' state
+            : comment
         );
-        setPosts(updatedPosts);
-        setNewComment(''); // Clear the input
-      } catch (error) {
-        console.error('Error creating comment:', error);
+        return { ...post, commentsData: updatedComments };
       }
-    }
+      return post;
+    });
+    setPosts(updatedPosts);
   };
-
-// Toggle like state for a comment
-const handleLikeComment = (postId, commentId) => {
-  const updatedPosts = posts.map((post) => {
-    if (post.id === postId) {
-      const updatedComments = post.commentsData.map((comment) =>
-        comment.id === commentId
-          ? { ...comment, liked: !comment.liked } // Toggle 'liked' state
-          : comment
-      );
-      return { ...post, commentsData: updatedComments };
-    }
-    return post;
-  });
-  setPosts(updatedPosts);
-};
-
-  // Handle liking a post (local increment of like count)
-  const handleLike = async (postId: string) => {
-    try {
-      const updatedPosts = posts.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              liked: !post.liked, // Toggle the 'liked' state
-              likes: post.liked ? post.likes - 1 : post.likes + 1, // Adjust like count
-            }
-          : post
-      );
-      setPosts(updatedPosts); // Update the posts state
-    } catch (error) {
-      console.error('Error liking the post:', error);
-    }
-  };
-  
-  if (!isAuthenticated) {
-    return null; // Avoid rendering anything if not authenticated
-  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
-        {loadingPosts ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          posts.map((post) => (
-            <View key={post.id} style={styles.postContainer}>
-              {/* Header: Profile image, author, time */}
-              <View style={styles.header}>
-                <Image
-                  source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTtcPVdcIDUDATBrcMoTRUoE2f1OOPz_nIeag&s' }} // Replace with the actual author image URL
-                  style={styles.avatar}
+        {posts.map((post) => (
+          <View key={post.id} style={styles.postContainer}>
+            {/* Header: Profile image, author, time */}
+            <View style={styles.header}>
+              <Image
+                source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwltzOYXgK3aTKoZgeavHmebuLyqiLFIBARx6TAw-li5Nzs-1wbPWrfMLbtx_2IV3kqQc&usqp=CAU' }} // Placeholder image
+                style={styles.avatar}
+              />
+              <View>
+                <Text style={styles.author}>{post.author}</Text>
+                <Text style={styles.time}>{post.time}</Text>
+              </View>
+            </View>
+
+            {/* Post Text Content */}
+            <Text style={styles.content}>{post.content}</Text>
+
+            {/* Post Image */}
+            {post.image && (
+              <Image
+                source={{ uri: post.image }}
+                style={styles.postImage}
+              />
+            )}
+
+            {/* Likes and Comments Summary */}
+            <View style={styles.postActions}>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => handleLike(post.id)}
+              >
+                <Ionicons
+                  name="heart-outline"
+                  size={18}
+                  color={post.liked ? 'red' : 'black'} // Change color based on 'liked' state
                 />
-                <View>
-                  <Text style={styles.author}>{post.author}</Text>
-                  <Text style={styles.time}>{post.time}</Text>
+                <Text style={[styles.actionText, { color: post.liked ? 'red' : 'black' }]}>
+                  {post.liked ? 'Liked' : 'Like'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={() => handleCommentToggle(post.id)}
+              >
+                <Ionicons name="chatbubble-outline" size={18} />
+                <Text style={styles.actionText}>Comment</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Comments Section */}
+            {selectedPostId === post.id && (
+              <View style={styles.commentsSection}>
+                <Text style={styles.commentsTitle}>Comments</Text>
+                <View style={styles.commentsContainer}>
+                  {post.commentsData.map((comment) => (
+                    <View key={comment.id} style={styles.commentContainer}>
+                      {/* Avatar */}
+                      <Image
+                        source={{ uri: 'https://i.scdn.co/image/ab6761610000e5ebd3c46774704f0ecb5a655974' }} // Placeholder for comment avatar
+                        style={styles.commentAvatar}
+                      />
+                      {/* Content and Like Icon */}
+                      <View style={styles.commentRow}>
+                        <View style={styles.commentContent}>
+                          <Text style={styles.commentUsername}>{comment.username}</Text>
+                          <Text style={styles.commentText}>{comment.content}</Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => handleLikeComment(post.id, comment.id)}
+                          style={styles.likeButton}
+                        >
+                          <Ionicons
+                            name="heart-outline"
+                            size={18}
+                            color={comment.liked ? 'red' : 'black'} // Change color based on 'liked' state
+                          />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+
+                {/* Comment Input */}
+                <View style={styles.inputContainer}>
+                  <TextInput
+                    placeholder="Add a comment..."
+                    style={styles.input}
+                    value={newComment}
+                    onChangeText={setNewComment}
+                  />
+                  <TouchableOpacity onPress={() => handleSendComment(post.id)}>
+                    <Ionicons name="send-outline" size={24} style={styles.sendIcon} />
+                  </TouchableOpacity>
                 </View>
               </View>
-
-              {/* Post Text Content */}
-              <Text style={styles.content}>{post.content}</Text>
-
-              {/* Post Image */}
-              {post.image && (
-                <Image
-                  source={{ uri: post.image }} // Placeholder for the actual post image
-                  style={styles.postImage}
-                />
-              )}
-
-              {/* Likes and Comments Summary */}
-              {/* <Text style={styles.likedBy}>{post.likes} Likes</Text> */}
-
-              {/* Post Actions */}
-              <View style={styles.postActions}>
-  <TouchableOpacity
-    style={styles.actionButton}
-    onPress={() => handleLike(post.id)}
-  >
-    <Ionicons
-      name="heart-outline"
-      size={18}
-      color={post.liked ? 'red' : 'black'} // Change color based on 'liked' state
-    />
-    <Text style={[styles.actionText, { color: post.liked ? 'red' : 'black' }]}>
-      {post.liked ? 'Liked' : 'Like'}
-    </Text>
-  </TouchableOpacity>
-  <TouchableOpacity
-    style={styles.actionButton}
-    onPress={() => handleCommentToggle(post.id)}
-  >
-    <Ionicons name="chatbubble-outline" size={18} />
-    <Text style={styles.actionText}>Comment</Text>
-  </TouchableOpacity>
-  <TouchableOpacity style={styles.actionButton}>
-    <Ionicons name="share-outline" size={18} />
-    <Text style={styles.actionText}>Share</Text>
-  </TouchableOpacity>
-</View>
-
-              {/* Comments Section */}
-              {selectedPostId === post.id && (
-                <View style={styles.commentsSection}>
-                  <Text style={styles.commentsTitle}>Comments</Text>
-                  <View style={styles.commentsContainer}>
-  
-                  {post.commentsData?.map((comment) => (
-  <View key={comment.id} style={styles.commentContainer}>
-    {/* Avatar */}
-    <Image
-      source={{ uri: comment.avatar }} // Replace with actual comment author avatar
-      style={styles.commentAvatar}
-    />
-    {/* Content and Like Icon */}
-    <View style={styles.commentRow}>
-      <View style={styles.commentContent}>
-        <Text style={styles.commentUsername}>{comment.username}</Text>
-        <Text style={styles.commentText}>{comment.content}</Text>
-      </View>
-      <TouchableOpacity
-        onPress={() => handleLikeComment(post.id, comment.id)}
-        style={styles.likeButton}
-      >
-        <Ionicons
-          name="heart-outline"
-          size={18}
-          color={comment.liked ? 'red' : 'black'} // Change color based on 'liked' state
-        />
-      </TouchableOpacity>
-    </View>
-  </View>
-))}
-
-
-</View>
-
-                  {/* Comment Input */}
-                  <View style={styles.inputContainer}>
-                    <TextInput
-                      placeholder="Add a comment..."
-                      style={styles.input}
-                      value={newComment}
-                      onChangeText={setNewComment}
-                    />
-                    <TouchableOpacity onPress={() => handleSendComment(post.id)}>
-                      <Ionicons name="send-outline" size={24} style={styles.sendIcon} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-            </View>
-          ))
-        )}
+            )}
+          </View>
+        ))}
       </ScrollView>
     </SafeAreaView>
   );
@@ -281,11 +257,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 10,
   },
-  likedBy: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 5,
-  },
   postActions: {
     flexDirection: 'row',
     marginTop: 10,
@@ -318,7 +289,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   commentContainer: {
-    flexDirection: 'row', // Align avatar and text in a row
+    flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 10,
     borderBottomWidth: 1,
@@ -330,6 +301,11 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: 20,
     marginRight: 10,
+  },
+  commentRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    flex: 1,
   },
   commentContent: {
     flex: 1,
@@ -344,16 +320,10 @@ const styles = StyleSheet.create({
     marginBottom: 5,
     color: '#333',
   },
-  commentActions: {
-    flexDirection: 'row',
+  likeButton: {
+    justifyContent: 'center',
     alignItems: 'center',
-    justifyContent: 'flex-start', // Align items horizontally
-  },
-  
-  commentActionText: {
-    marginLeft: 5,
-    fontSize: 12,
-    color: '#666',
+    paddingLeft: 10,
   },
   inputContainer: {
     flexDirection: 'row',

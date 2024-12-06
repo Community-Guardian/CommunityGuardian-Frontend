@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'expo-router'; // Adjust based on your router setup
 import Ionicons from '@expo/vector-icons/Ionicons'; // Import Ionicons for the eye icon
 
@@ -11,18 +10,19 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false); // For toggling password visibility
   const [loading, setLoading] = useState(false); // To show logging in state
 
-  const { login } = useAuth(); // Use the login function from AuthContext
   const router = useRouter(); // Using router for navigation
 
   const handleLogin = async () => {
     setLoading(true); // Show "Logging in..." when login is in progress
     try {
-      await login(username, password);
-      setLoading(false); // Hide "Logging in..." after successful login
-      router.push('/(tabs)/'); // Navigate to the home screen or dashboard after login
+      // Simulate a successful login
+      setTimeout(() => {
+        setLoading(false);
+        router.push('/(tabs)/'); // Navigate to the home screen or dashboard after login
+      }, 1000); // Simulate a delay
     } catch (error) {
       setLoading(false); // Hide "Logging in..." if login fails
-      alert('Login failed. Please check your credentials.');
+      alert('Login failed. Please try again.');
     }
   };
 

@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { ScrollView,SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { ScrollView, SafeAreaView, View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router'; // Adjust based on your routing setup
-import { useAuth } from '@/context/AuthContext'; // Import the useAuth hook from AuthContext
 import Ionicons from '@expo/vector-icons/Ionicons'; // Import Ionicons for the eye icon
 
 export default function SignUpScreen() {
@@ -14,22 +13,16 @@ export default function SignUpScreen() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false); // For toggling confirm password visibility
 
   const router = useRouter(); // Using router for navigation
-  const { signUp, loading } = useAuth(); // Get the signUp method from AuthContext
 
-  const handleSignUp = async () => {
+  const handleSignUp = () => {
     if (password !== confirmPassword) {
       Alert.alert('Error', 'Passwords do not match');
       return;
     }
 
-    try {
-      // Call signUp function from AuthContext
-      await signUp(email, password, confirmPassword, 'individual'); // Assuming 'user' as userType
-      Alert.alert('Success', 'Account created successfully!');
-      router.push('/(auth)/Login'); // Navigate to login after successful sign-up
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create an account');
-    }
+    // Static success alert, without any backend interaction
+    Alert.alert('Success', 'Account created successfully!');
+    router.push('/(auth)/Login'); // Navigate to login after successful sign-up
   };
 
   const handleLoginRedirect = () => {
@@ -38,98 +31,98 @@ export default function SignUpScreen() {
   };
 
   return (
-
     <SafeAreaView style={styles.container}>
       <ScrollView>
-      {/* Gradient Background */}
-      <LinearGradient
-        colors={['hsla(0, 75%, 50%, 1)', 'hsla(147, 62%, 35%, 1)']} // Red to Green
-        start={[0.75, 0.25]} // This approximates the 225-degree angle
-        end={[0, 1]} // This specifies the direction of the gradient
-        style={styles.backgroundImage}
-      />
-
-      {/* Welcome Text */}
-      <View style={styles.formContainer}>
-        <Text style={styles.welcomeText}>Welcome</Text>
-        <Text style={styles.subText}>Sign Up to your account</Text>
-
-        {/* Email Input */}
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          placeholderTextColor="#6b7280"
-          autoCapitalize="none"
+        {/* Gradient Background */}
+        <LinearGradient
+          colors={['hsla(0, 75%, 50%, 1)', 'hsla(147, 62%, 35%, 1)']} // Red to Green
+          start={[0.75, 0.25]} // This approximates the 225-degree angle
+          end={[0, 1]} // This specifies the direction of the gradient
+          style={styles.backgroundImage}
         />
 
-        {/* Username Input */}
-        {/* <TextInput
-          style={styles.input}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          placeholderTextColor="#6b7280"
-          autoCapitalize="none"
-        /> */}
+        {/* Welcome Text */}
+        <View style={styles.formContainer}>
+          <Text style={styles.welcomeText}>Welcome</Text>
+          <Text style={styles.subText}>Sign Up to your account</Text>
 
-        {/* Password Input */}
-        <View style={styles.passwordContainer}>
+          {/* Email Input */}
           <TextInput
-            style={styles.passwordInput}
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword} // Toggle secure text entry based on state
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
             placeholderTextColor="#6b7280"
             autoCapitalize="none"
           />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-            <Ionicons
-              name={showPassword ? 'eye-off' : 'eye'}
-              size={24}
-              color="grey"
-              style={styles.eyeIcon}
-            />
-          </TouchableOpacity>
-        </View>
 
-        {/* Confirm Password Input */}
-        <View style={styles.passwordContainer}>
-          <TextInput
-            style={styles.passwordInput}
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry={!showConfirmPassword} // Toggle secure text entry based on state
+          {/* Username Input */}
+          {/* Commented out as not being used */}
+          {/* <TextInput
+            style={styles.input}
+            placeholder="Username"
+            value={username}
+            onChangeText={setUsername}
             placeholderTextColor="#6b7280"
             autoCapitalize="none"
-          />
-          <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
-            <Ionicons
-              name={showConfirmPassword ? 'eye-off' : 'eye'}
-              size={24}
-              color="grey"
-              style={styles.eyeIcon}
+          /> */}
+
+          {/* Password Input */}
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword} // Toggle secure text entry based on state
+              placeholderTextColor="#6b7280"
+              autoCapitalize="none"
             />
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons
+                name={showPassword ? 'eye-off' : 'eye'}
+                size={24}
+                color="grey"
+                style={styles.eyeIcon}
+              />
+            </TouchableOpacity>
+          </View>
 
-        {/* Sign Up Button */}
-        <TouchableOpacity style={styles.loginButton} onPress={handleSignUp} disabled={loading}>
-          <Text style={styles.loginButtonText}>{loading ? 'Signing Up...' : 'Sign Up'}</Text>
-        </TouchableOpacity>
+          {/* Confirm Password Input */}
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              secureTextEntry={!showConfirmPassword} // Toggle secure text entry based on state
+              placeholderTextColor="#6b7280"
+              autoCapitalize="none"
+            />
+            <TouchableOpacity onPress={() => setShowConfirmPassword(!showConfirmPassword)}>
+              <Ionicons
+                name={showConfirmPassword ? 'eye-off' : 'eye'}
+                size={24}
+                color="grey"
+                style={styles.eyeIcon}
+              />
+            </TouchableOpacity>
+          </View>
 
-        {/* Already have an account? Log In */}
-        <View style={styles.loginRedirectContainer}>
-          <Text style={styles.loginRedirectText}>Already have an account?</Text>
-          <TouchableOpacity onPress={handleLoginRedirect}>
-            <Text style={styles.loginRedirectLink}> Log In</Text>
+          {/* Sign Up Button */}
+          <TouchableOpacity style={styles.loginButton} onPress={handleSignUp}>
+            <Text style={styles.loginButtonText}>Sign Up</Text>
           </TouchableOpacity>
+
+          {/* Already have an account? Log In */}
+          <View style={styles.loginRedirectContainer}>
+            <Text style={styles.loginRedirectText}>Already have an account?</Text>
+            <TouchableOpacity onPress={handleLoginRedirect}>
+              <Text style={styles.loginRedirectLink}> Log In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-     </ScrollView>
+      </ScrollView>
     </SafeAreaView>
   );
 }

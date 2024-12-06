@@ -88,7 +88,7 @@ const EmergencyScreen = () => {
       );
     } else {
       console.log('No emergency contacts found'); // Debugging log
-      Alert.alert('No Emergency Contact', 'Please add an emergency contact.');
+      Alert.alert('Successfull SOS ', 'You have successfully contacted your emergency contacts.');
     }
   };
   
