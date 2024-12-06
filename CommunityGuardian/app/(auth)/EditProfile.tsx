@@ -1,41 +1,28 @@
 import React, { useState } from 'react';
 import { SafeAreaView, TextInput, StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
-import { useAuth } from '@/context/AuthContext'; // Assuming you have the useAuth hook
 
 export default function EditProfileScreen() {
-  const { user, updateUser } = useAuth(); // Get the current user and updateUser function
-  const [firstName, setFirstName] = useState(user?.details?.first_name || '');
-  const [lastName, setLastName] = useState(user?.details?.last_name || '');
-  const [username, setUsername] = useState(user?.details?.username || '');
-  const [contactNumber, setContactNumber] = useState(user?.details?.contact_number || '');
-  const [email, setEmail] = useState(user?.details?.email || '');
+  // Local state for the profile fields
+  const [firstName, setFirstName] = useState('John'); // Default first name
+  const [lastName, setLastName] = useState('Doe'); // Default last name
+  const [username, setUsername] = useState('john_doe'); // Default username
+  const [contactNumber, setContactNumber] = useState('1234567890'); // Default contact number
+  const [email, setEmail] = useState('john.doe@example.com'); // Default email
 
-  const handleSave = async () => {
-    const updatedData = {
-      first_name:firstName,
-      last_name:lastName,
-      username:username,
-      contact_number:contactNumber,
-      email:email,
-    };
-    try {
-      await updateUser(updatedData); // Call updateUser to handle profile update
-      alert('Profile updated successfully!');
-    } catch (error) {
-      console.error('Failed to update profile:', error);
-      alert('Failed to update profile.');
-    }
+  // Static save handler with alert
+  const handleSave = () => {
+    alert('Profile updated successfully!'); // Just an alert without backend interaction
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.profileSection}>
         <Image
-          source={{ uri: user?.profileImage || 'https://c.files.bbci.co.uk/assets/4da9473d-2f23-4b23-aac5-32c728a4da8f' }} // Placeholder or user image
+          source={{ uri: 'https://c.files.bbci.co.uk/assets/4da9473d-2f23-4b23-aac5-32c728a4da8f' }} // Placeholder image
           style={styles.profileImage}
         />
         <TouchableOpacity style={styles.editIcon}>
-          <Text style={styles.editIconText}>+</Text> 
+          <Text style={styles.editIconText}>+</Text>
         </TouchableOpacity>
       </View>
 
@@ -105,7 +92,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10, 
+    marginLeft: 10,
   },
   editIconText: {
     color: '#fff',
